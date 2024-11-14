@@ -44,5 +44,5 @@ class Args:
     # Causal Explorer-specific arguments
     max_nway_interact: int = 10
     """maximum n-way interactions to test"""
-    max_traj_per_interact: int = 50
+    max_traj_per_interact: int = 20
     """number of trajectories to run per n-way interaction"""
