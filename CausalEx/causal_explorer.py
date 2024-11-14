@@ -4,7 +4,6 @@ import random
 import time
 
 import numpy as np
-import gymnasium as gym
 from stable_baselines3.common.buffers import ReplayBuffer
 import torch
 
@@ -51,7 +50,8 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
     obs, _ = env.reset(seed=(args.seed + ADJUST_SEED))
     episode_reward = 0
     episode_length = 0
-    for unmask_cols in interaction_col_idxs:
+    for idx, unmask_cols in enumerate(interaction_col_idxs):
+        print(f"Causal Explorer: {idx+1} / {len(interaction_col_idxs)} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
         mask_array = np.ones((n_action_dims,), dtype=bool)
         mask_array[[col_idx for col_idx in unmask_cols]] = False
         for traj_idx in range(args.max_traj_per_interact):
@@ -76,11 +76,11 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
                 # Reset environment on termination or truncation
                 if terminations or truncations:
                     obs, _ = env.reset() #TODO: consider setting seed here
-                    print(
-                        f"# interactions: {n_action_dims - sum(mask_array)}; " +
-                        f"trajectory idx: {traj_idx}; " +
-                        f"episode reward, length: ({episode_reward}, {episode_length})"
-                    )
+                    # print(
+                    #     f"# interactions: {n_action_dims - sum(mask_array)}; " +
+                    #     f"trajectory idx: {traj_idx}; " +
+                    #     f"episode reward, length: ({episode_reward}, {episode_length})"
+                    # )
                     episode_reward = 0
                     episode_length = 0
                 else:

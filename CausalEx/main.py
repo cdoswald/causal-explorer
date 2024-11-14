@@ -1,4 +1,3 @@
-from itertools import combinations
 import os
 import random
 import time
@@ -291,9 +290,9 @@ if __name__ == "__main__":
     env_ids = [
         "Ant-v4",
         "HalfCheetah-v4",
-        "Hopper-v4",
+        # "Hopper-v4", #TODO: fix XML file
         "Humanoid-v4",
-        "Walker2d-v4",
+        # "Walker2d-v4", #TODO: fix XML file
     ]
 
     for env_id in env_ids:

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Args:
-    exp_name: str = "SAC_baseline"
+    exp_name: str = "SAC_causal"
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
