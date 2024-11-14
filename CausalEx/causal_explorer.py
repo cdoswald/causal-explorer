@@ -12,6 +12,8 @@ import torch
 # TODO: plot histogram of rewards of different n-way interactions
 # TODO: render trajectories of causal explorer
 # TODO: consider slight perturbations (positive and negative) relative to baseline action
+# TODO: explore how batch size and training frequency params affect average episode return
+# TODO: explore diminishing returns of causal exploration period length
 
 ADJUST_SEED = 829 # don't use exact same seed as main RL pipeline
 
@@ -50,11 +52,18 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
     obs, _ = env.reset(seed=(args.seed + ADJUST_SEED))
     episode_reward = 0
     episode_length = 0
+    saved_obs = 0
     for idx, unmask_cols in enumerate(interaction_col_idxs):
-        print(f"Causal Explorer: {idx+1} / {len(interaction_col_idxs)} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
+        # Implement hard cap on number of saved observations
+        if saved_obs > args.prepopulate_buffer_hard_cap:
+            break
+        print(f"CausalEx iteration: {idx+1} / {len(interaction_col_idxs)} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
         mask_array = np.ones((n_action_dims,), dtype=bool)
         mask_array[[col_idx for col_idx in unmask_cols]] = False
         for traj_idx in range(args.max_traj_per_interact):
+            # Implement hard cap on number of saved observations
+            if saved_obs > args.prepopulate_buffer_hard_cap:
+                break
             # Iterate through entire trajectory
             terminations = truncations = False
             while not (terminations or truncations):
@@ -65,7 +74,7 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
                 # Add data to replay buffer
                 real_next_obs = next_obs.copy() if not (terminations or truncations) else obs
                 rb.add(obs, real_next_obs, actions, rewards, terminations, infos)
-
+                saved_obs += 1
                 episode_reward += rewards
                 episode_length += 1
                 # if "episode" in infos:
@@ -120,7 +129,11 @@ def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
     obs, _ = env.reset(seed=(args.seed + ADJUST_SEED))
     episode_reward = 0
     episode_length = 0
+    saved_obs = 0
     for traj_idx in range(n_total_traj):
+        # Implement hard cap on number of saved observations
+        if saved_obs > args.prepopulate_buffer_hard_cap:
+            break
         # Iterate through entire trajectory
         terminations = truncations = False
         while not (terminations or truncations):
@@ -130,7 +143,7 @@ def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
             # Add data to replay buffer
             real_next_obs = next_obs.copy() if not (terminations or truncations) else obs
             rb.add(obs, real_next_obs, actions, rewards, terminations, infos)
-
+            saved_obs += 1
             episode_reward += rewards
             episode_length += 1
             # if "episode" in infos:
