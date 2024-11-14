@@ -81,7 +81,7 @@ def train_SAC(args):
         rb = prepopulate_buffer_random(env, rb, args)
     else:
         raise ValueError(
-            f"Replay buffer prepopulation method \"{args.prepopulate_buffer_method}\" +
+            f"Replay buffer prepopulation method '{args.prepopulate_buffer_method}' +
             not recognized. Double-check config.Args parameters."
         )
     #TODO: print non-empty buffer size here
@@ -146,7 +146,7 @@ def train_SAC(args):
             q_optimizer.zero_grad()
             qf_loss.backward()
             q_optimizer.step()
-
+100000
             if global_step % args.policy_frequency == 0:  # TD 3 Delayed update support
                 for _ in range(
                     args.policy_frequency
