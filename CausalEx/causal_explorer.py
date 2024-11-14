@@ -131,6 +131,7 @@ def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
     episode_length = 0
     saved_obs = 0
     for traj_idx in range(n_total_traj):
+        print(f"Random explorer: iter {traj_idx+1} / {n_total_traj}")
         # Implement hard cap on number of saved observations
         if saved_obs > args.prepopulate_buffer_hard_cap:
             break
@@ -154,10 +155,10 @@ def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
             # Reset environment on termination or truncation
             if terminations or truncations:
                 obs, _ = env.reset() #TODO: consider setting seed here
-                print(
-                    f"trajectory idx: {traj_idx}; " +
-                    f"episode reward, length: ({episode_reward}, {episode_length})"
-                )
+                # print(
+                #     f"trajectory idx: {traj_idx}; " +
+                #     f"episode reward, length: ({episode_reward}, {episode_length})"
+                # )
                 episode_reward = 0
                 episode_length = 0
             else:
