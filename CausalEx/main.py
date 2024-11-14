@@ -81,8 +81,8 @@ def train_SAC(args):
         rb = prepopulate_buffer_random(env, rb, args)
     else:
         raise ValueError(
-            f"Replay buffer prepopulation method '{args.prepopulate_buffer_method}' +
-            not recognized. Double-check config.Args parameters."
+            f"Replay buffer prepopulation method '{args.prepopulate_buffer_method}' " +
+            f"not recognized. Double-check config.Args parameters."
         )
     #TODO: print non-empty buffer size here
 
