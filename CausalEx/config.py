@@ -42,6 +42,8 @@ class Args:
     # Causal Explorer-specific arguments
     prepopulate_buffer_method: str = "causal"
     """method for prepopulating replay buffer; options are {'causal', 'random'}"""
+    prepopulate_buffer_hard_cap: int = 100000
+    """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_nway_interact: int = 10
     """maximum n-way interactions to test"""
     max_traj_per_interact: int = 50

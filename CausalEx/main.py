@@ -301,23 +301,28 @@ if __name__ == "__main__":
         print(env.observation_space)
         print(env.action_space)
 
-        # Train agent
-        train_args = Args()
-        train_args.exp_name = "SAC_baseline_train_causal"
-        train_args.env_id = env_id
-        train_args.seed = 42
-        train_args.total_timesteps = 100000
-        train_args.buffer_size = 100000
-        train_args.prepopulate_buffer_method = "causal"
+        # Specify CausalExplorer mode
+        for cx_mode in ["causal", "random"]:
+            print(f"Starting env '{env_id}', cx_mode: {cx_mode} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
+    
+            # Train agent
+            train_args = Args()
+            train_args.exp_name = f"SAC_baseline_train_{cx_mode}"
+            train_args.env_id = env_id
+            train_args.seed = 42
+            train_args.total_timesteps = 100000
+            train_args.buffer_size = 1000000
+            train_args.prepopulate_buffer_method = cx_mode
+            train_args.prepopulate_buffer_hard_cap = 1000000
 
-        train_SAC(train_args)
+            train_SAC(train_args)
 
-        # Evaluate agent
-        eval_args = Args()
-        eval_args.exp_name = "SAC_baseline_eval_causal"
-        eval_args.env_id = env_id
-        eval_args.seed = 42
-        eval_args.total_timesteps = 10000
-        
-        actor_path = f"runs/{train_args.env_id}__{train_args.exp_name}__{train_args.seed}/actor.pth"
-        eval_SAC(eval_args, actor_path=actor_path)
+            # Evaluate agent
+            eval_args = Args()
+            eval_args.exp_name = f"SAC_baseline_eval_{cx_mode}"
+            eval_args.env_id = env_id
+            eval_args.seed = 42
+            eval_args.total_timesteps = 10000
+            
+            actor_path = f"runs/{train_args.env_id}__{train_args.exp_name}__{train_args.seed}/actor.pth"
+            eval_SAC(eval_args, actor_path=actor_path)
