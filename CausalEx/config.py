@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Args:
-    exp_name: str = "SAC_causal"
+    exp_name: str = "SAC_baseline"
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
@@ -18,8 +18,6 @@ class Args:
     """total timesteps of the experiments"""
     buffer_size: int = int(1e6)
     """the replay memory buffer size"""
-    prepopulate_buffer_method: str = "causal"
-    """method for prepopulating replay buffer; options are {'causal', 'random'}"""
     gamma: float = 0.99
     """the discount factor gamma"""
     tau: float = 0.005
@@ -42,7 +40,9 @@ class Args:
     """automatic tuning of the entropy coefficient"""
 
     # Causal Explorer-specific arguments
+    prepopulate_buffer_method: str = "causal"
+    """method for prepopulating replay buffer; options are {'causal', 'random'}"""
     max_nway_interact: int = 10
     """maximum n-way interactions to test"""
-    max_traj_per_interact: int = 20
+    max_traj_per_interact: int = 50
     """number of trajectories to run per n-way interaction"""

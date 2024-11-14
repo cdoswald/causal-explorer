@@ -303,20 +303,21 @@ if __name__ == "__main__":
 
         # Train agent
         train_args = Args()
-        train_args.exp_name = "SAC_baseline_train"
+        train_args.exp_name = "SAC_baseline_train_causal"
         train_args.env_id = env_id
         train_args.seed = 42
         train_args.total_timesteps = 100000
         train_args.buffer_size = 100000
+        train_args.prepopulate_buffer_method = "causal"
 
         train_SAC(train_args)
 
         # Evaluate agent
         eval_args = Args()
-        eval_args.exp_name = "SAC_baseline_eval"
+        eval_args.exp_name = "SAC_baseline_eval_causal"
         eval_args.env_id = env_id
         eval_args.seed = 42
         eval_args.total_timesteps = 10000
-
+        
         actor_path = f"runs/{train_args.env_id}__{train_args.exp_name}__{train_args.seed}/actor.pth"
         eval_SAC(eval_args, actor_path=actor_path)
