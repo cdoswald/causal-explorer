@@ -56,8 +56,10 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
     for idx, unmask_cols in enumerate(interaction_col_idxs):
         # Implement hard cap on number of saved observations
         if saved_obs > args.prepopulate_buffer_hard_cap:
+            print(f"Reached hard cap of {args.prepopulate_buffer_hard_cap} observations")
             break
-        print(f"CausalEx iteration: {idx+1} / {len(interaction_col_idxs)} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
+        print(f"Generating unique interaction: {idx+1} / {len(interaction_col_idxs)} " +
+              f" ({time.strftime('%Y-%m-%d %H:%M:%S')})")
         mask_array = np.ones((n_action_dims,), dtype=bool)
         mask_array[[col_idx for col_idx in unmask_cols]] = False
         for traj_idx in range(args.max_traj_per_interact):
@@ -131,9 +133,10 @@ def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
     episode_length = 0
     saved_obs = 0
     for traj_idx in range(n_total_traj):
-        print(f"Random explorer: iter {traj_idx+1} / {n_total_traj}")
+        print(f"Randomly generating trajectory {traj_idx+1} / {n_total_traj}")
         # Implement hard cap on number of saved observations
         if saved_obs > args.prepopulate_buffer_hard_cap:
+            print(f"Reached hard cap of {args.prepopulate_buffer_hard_cap} observations")
             break
         # Iterate through entire trajectory
         terminations = truncations = False
