@@ -1,21 +1,37 @@
 from dataclasses import dataclass
+import json
+import os
+import time
 
+
+# Largely based on CleanRL SAC implementation
 @dataclass
 class Args:
-    exp_name: str = "SAC_baseline"
-    """the name of this experiment"""
-    seed: int = 1
-    """seed of the experiment"""
+    # General settings
     torch_deterministic: bool = True
     """if toggled, `torch.backends.cudnn.deterministic=False`"""
     cuda: bool = True
     """if toggled, cuda will be enabled by default"""
 
-    # RL algorithm-specific arguments
+    # Experiment settings
     env_id: str = "Hopper-v4"
     """the environment id of the task"""
-    total_timesteps: int = 1000000
-    """total timesteps of the experiments"""
+    cx_mode: str = "causal"
+    """method for prepopulating replay buffer; options: {'causal', 'random'}"""
+    seed: int = 1
+    """seed of the experiment"""
+
+    # Directories
+    run_dir: str = f"run_{int(time.time())}"
+    """directory to store all experiment results"""
+    exp_dir: str = os.path.join(run_dir, f"env_{env_id}_mode_{cx_mode}_seed_{seed}")
+    """subdirectory to store specific experiment results"""
+
+    # RL algorithm-specific arguments
+    train_timesteps: int = 100_000
+    """total training timesteps of the experiments"""
+    eval_timesteps: int = 50_000
+    """total evaluation timesteps of the experiments"""
     buffer_size: int = int(1e6)
     """the replay memory buffer size"""
     gamma: float = 0.99
@@ -40,8 +56,6 @@ class Args:
     """automatic tuning of the entropy coefficient"""
 
     # Causal Explorer-specific arguments
-    prepopulate_buffer_method: str = "causal"
-    """method for prepopulating replay buffer; options are {'causal', 'random'}"""
     prepopulate_buffer_hard_cap: int = 100_000
     """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_nway_interact: int = 6
@@ -49,6 +63,14 @@ class Args:
     max_traj_per_interact: int = 2
     """number of trajectories to run per n-way interaction"""
 
-    def gen_run_name(self):
-        # create run name
-        self.run_name = f"{self.env_id}__{self.exp_name}__{self.seed}"
+
+    def save_config(self, path) -> None:
+        """Save configuration parameters for reference."""
+        with open(path, "w") as file:
+            json.dump(self.__dict__, file, indent=4)
+    
+    def update_exp_dir(self) -> None:
+        """Update experiment directory if run directory, env_id, or seed changes."""
+        self.exp_dir = os.path.join(
+            self.run_dir, f"env_{self.env_id}_mode_{self.cx_mode}_seed_{self.seed}"
+        )
