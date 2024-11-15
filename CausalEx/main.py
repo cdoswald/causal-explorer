@@ -21,13 +21,8 @@ from models import Actor, SoftQNetwork
 from utils import save_video
 
 
-# Modified version of CleanRL SAC implementation
-def train_SAC(args):
-    writer = SummaryWriter(f"runs/{args.run_name}")
-    writer.add_text(
-        "hyperparameters",
-        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
-    )
+# Largely based on CleanRL SAC implementation
+def run_experiment(args):
 
     # TRY NOT TO MODIFY: seeding
     random.seed(args.seed)
@@ -38,12 +33,10 @@ def train_SAC(args):
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
     # env setup
-    env = gym.make(args.env_id, render_mode=None)
+    env = gym.make(args.env_id, render_mode="rgb_array")
     env = gym.wrappers.RecordEpisodeStatistics(env)
     env.action_space.seed(args.seed)
     assert isinstance(env.action_space, gym.spaces.Box), "only continuous action space is supported"
-
-    max_action = float(env.action_space.high[0])
 
     actor = Actor(env).to(device)
     qf1 = SoftQNetwork(env).to(device)
@@ -75,14 +68,13 @@ def train_SAC(args):
     start_time = time.time()
 
     # Prepopulate replay buffer
-    if args.prepopulate_buffer_method.lower() == "causal":
+    if args.cx_mode.lower() == "causal":
         rb = prepopulate_buffer_causal(env, rb, args)
-    elif args.prepopulate_buffer_method.lower() == "random":
+    elif args.cx_mode.lower() == "random":
         rb = prepopulate_buffer_random(env, rb, args)
     else:
         raise ValueError(
-            f"Replay buffer prepopulation method '{args.prepopulate_buffer_method}' " +
-            f"not recognized. Double-check config.Args parameters."
+            f"CX mode'{args.cx_mode} not recognized. Double-check configuration arguments."
         )
     #TODO: print non-empty buffer size here
 
@@ -92,7 +84,7 @@ def train_SAC(args):
     episode_reward = 0
     episode_length = 0
     obs, _ = env.reset(seed=args.seed)
-    for global_step in range(args.total_timesteps):
+    for global_step in range(args.train_timesteps):
         # ALGO LOGIC: put action logic here
         actions, _, _ = actor.get_action(torch.Tensor(obs).to(device))
         actions = actions.detach().cpu().numpy()
@@ -117,13 +109,10 @@ def train_SAC(args):
             episode_rewards.append(episode_reward)
             episode_lengths.append(episode_length)
             print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
-            writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
-            writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
 
         # Reset environment on termination or truncation
         if terminations or truncations:
             obs, _ = env.reset(seed=args.seed)
-            # print(f'Global step: {global_step}; episode reward: {episode_reward}; length = {episode_length}')
             episode_reward = 0
             episode_length = 0
         else:
@@ -182,205 +171,174 @@ def train_SAC(args):
                 for param, target_param in zip(qf2.parameters(), qf2_target.parameters()):
                     target_param.data.copy_(args.tau * param.data + (1 - args.tau) * target_param.data)
 
-            if global_step % 100 == 0:
-                writer.add_scalar("losses/qf1_values", qf1_a_values.mean().item(), global_step)
-                writer.add_scalar("losses/qf2_values", qf2_a_values.mean().item(), global_step)
-                writer.add_scalar("losses/qf1_loss", qf1_loss.item(), global_step)
-                writer.add_scalar("losses/qf2_loss", qf2_loss.item(), global_step)
-                writer.add_scalar("losses/qf_loss", qf_loss.item() / 2.0, global_step)
-                writer.add_scalar("losses/actor_loss", actor_loss.item(), global_step)
-                writer.add_scalar("losses/alpha", alpha, global_step)
-                print("SPS:", int(global_step / (time.time() - start_time)))
-                writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
-                if args.autotune:
-                    writer.add_scalar("losses/alpha_loss", alpha_loss.item(), global_step)
-
     # Save models
-    torch.save(actor.state_dict(), f"runs/{args.run_name}/actor.pth")
-    torch.save(qf1.state_dict(), f"runs/{args.run_name}/qf1.pth")
-    torch.save(qf2.state_dict(), f"runs/{args.run_name}/qf2.pth")
+    torch.save(actor.state_dict(), os.path.join(args.exp_dir, "actor.pth"))
+    torch.save(qf1.state_dict(), os.path.join(args.exp_dir, "qf1.pth"))
+    torch.save(qf2.state_dict(), os.path.join(args.exp_dir, "qf2.pth"))
 
     # Save metrics
-    with open(f"runs/{args.run_name}/episode_rewards.json", "w") as io:
+    with open(os.path.join(args.exp_dir, f"episode_rewards.json"), "w") as io:
         json.dump(episode_rewards, io)
-    with open(f"runs/{args.run_name}/episode_lengths.json", "w") as io:
+    with open(os.path.join(args.exp_dir, "episode_lengths.json"), "w") as io:
         json.dump(episode_lengths, io)
 
     # Clean up
     env.close()
-    writer.close()
 
 
-def eval_SAC(args, actor_path):
-    """Evaluate trained SAC agent"""
-    writer = SummaryWriter(f"runs/{args.run_name}")
-    writer.add_text(
-        "hyperparameters",
-        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
-    )
+# def eval_SAC(args, actor_path):
+#     """Evaluate trained SAC agent"""
+#     writer = SummaryWriter(f"runs/{args.run_name}")
+#     writer.add_text(
+#         "hyperparameters",
+#         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
+#     )
 
-    # TRY NOT TO MODIFY: seeding
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.backends.cudnn.deterministic = args.torch_deterministic
+#     # TRY NOT TO MODIFY: seeding
+#     random.seed(args.seed)
+#     np.random.seed(args.seed)
+#     torch.manual_seed(args.seed)
+#     torch.backends.cudnn.deterministic = args.torch_deterministic
 
-    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+#     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
-    # env setup
-    env = gym.make(args.env_id, render_mode="rgb_array")
-    videos_dir = f"videos/{args.run_name}"
-    os.makedirs(videos_dir, exist_ok=True)
-    # env = RecordVideo(
-    #     env,
-    #     f"videos/{args.run_name}",
-    #     episode_trigger=lambda episode_id: episode_id % 20 == 0,
-    # )
-    env = gym.wrappers.RecordEpisodeStatistics(env)
-    env.action_space.seed(args.seed)
+#     # env setup
+#     env = gym.make(args.env_id, render_mode="rgb_array")
+#     videos_dir = f"videos/{args.run_name}"
+#     os.makedirs(videos_dir, exist_ok=True)
+#     # env = RecordVideo(
+#     #     env,
+#     #     f"videos/{args.run_name}",
+#     #     episode_trigger=lambda episode_id: episode_id % 20 == 0,
+#     # )
+#     env = gym.wrappers.RecordEpisodeStatistics(env)
+#     env.action_space.seed(args.seed)
 
-    assert isinstance(env.action_space, gym.spaces.Box), "only continuous action space is supported"
-    max_action = float(env.action_space.high[0])
+#     assert isinstance(env.action_space, gym.spaces.Box), "only continuous action space is supported"
+#     max_action = float(env.action_space.high[0])
 
-    # Load model
-    actor = Actor(env).to(device)
-    actor.load_state_dict(torch.load(actor_path, weights_only=True))
+#     # Load model
+#     actor = Actor(env).to(device)
+#     actor.load_state_dict(torch.load(actor_path, weights_only=True))
 
-    # TRY NOT TO MODIFY: start the game
-    episode_rewards = []
-    episode_lengths = []
-    episode_frames = []
-    episode_reward = 0
-    episode_length = 0
-    episode_idx = 0
-    obs, _ = env.reset(seed=args.seed)
-    for global_step in range(args.total_timesteps):
-        # ALGO LOGIC: put action logic here
-        _, _, mean_action = actor.get_action(torch.Tensor(obs).to(device))
-        actions = mean_action.detach().cpu().numpy()
+#     # TRY NOT TO MODIFY: start the game
+#     episode_rewards = []
+#     episode_lengths = []
+#     episode_frames = []
+#     episode_reward = 0
+#     episode_length = 0
+#     episode_idx = 0
+#     obs, _ = env.reset(seed=args.seed)
+#     for global_step in range(args.eval_timesteps):
+#         # ALGO LOGIC: put action logic here
+#         _, _, mean_action = actor.get_action(torch.Tensor(obs).to(device))
+#         actions = mean_action.detach().cpu().numpy()
 
-        # TRY NOT TO MODIFY: execute the game and log data.
-        next_obs, rewards, terminations, truncations, infos = env.step(actions)
+#         # TRY NOT TO MODIFY: execute the game and log data.
+#         next_obs, rewards, terminations, truncations, infos = env.step(actions)
 
-        # Render and record frame (VideoRecorder not working correctly)
-        episode_frames.append(env.render().astype(np.uint8))
+#         # Render and record frame (VideoRecorder not working correctly)
+#         episode_frames.append(env.render().astype(np.uint8))
 
-        # TRY NOT TO MODIFY: record rewards for plotting purposes
-        episode_reward += rewards
-        episode_length += 1
-        if "episode" in infos:
-            episode_rewards.append(episode_reward)
-            episode_lengths.append(episode_length)
-            print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
-            writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
-            writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
+#         # TRY NOT TO MODIFY: record rewards for plotting purposes
+#         episode_reward += rewards
+#         episode_length += 1
+#         if "episode" in infos:
+#             episode_rewards.append(episode_reward)
+#             episode_lengths.append(episode_length)
+#             print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
+#             writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
+#             writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
 
-        # Reset environment on termination or truncation
-        if terminations or truncations:
-            obs, _ = env.reset()
-            # print(f'Global step: {global_step}; episode reward: {episode_reward}; length = {episode_length}')
-            episode_reward = 0
-            episode_length = 0
-            # Save episode video
-            if episode_idx < 10:
-                save_path = os.path.join(videos_dir, f"episode_{episode_idx}.mp4")
-                save_video(episode_frames, save_path)
-            # Increment episode index and reset frames list
-            episode_idx += 1
-            episode_frames = []
-        else:
-            # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
-            obs = next_obs
+#         # Reset environment on termination or truncation
+#         if terminations or truncations:
+#             obs, _ = env.reset()
+#             # print(f'Global step: {global_step}; episode reward: {episode_reward}; length = {episode_length}')
+#             episode_reward = 0
+#             episode_length = 0
+#             # Save episode video
+#             if episode_idx < 10:
+#                 save_path = os.path.join(videos_dir, f"episode_{episode_idx}.mp4")
+#                 save_video(episode_frames, save_path)
+#             # Increment episode index and reset frames list
+#             episode_idx += 1
+#             episode_frames = []
+#         else:
+#             # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
+#             obs = next_obs
 
-    # Save metrics
-    with open(f"runs/{args.run_name}/episode_rewards.json", "w") as io:
-        json.dump(episode_rewards, io)
-    with open(f"runs/{args.run_name}/episode_lengths.json", "w") as io:
-        json.dump(episode_lengths, io)
+#     # Save metrics
+#     with open(f"runs/{args.run_name}/episode_rewards.json", "w") as io:
+#         json.dump(episode_rewards, io)
+#     with open(f"runs/{args.run_name}/episode_lengths.json", "w") as io:
+#         json.dump(episode_lengths, io)
 
-    # Clean up
-    env.close()
-    writer.close()
+#     # Clean up
+#     env.close()
+#     writer.close()
 
 
 if __name__ == "__main__":
 
+    use_n_seeds = 10 # max is currently 100
+
+    # Record start time
+    start_time = time.strftime('%Y-%m-%d %H:%M:%S')
+
+    # Specify run name
+    run_name = "SAC_241115v1"
+    run_dir = os.path.join("runs", run_name)
+    os.makedirs(run_dir, exist_ok=True)
+
+    # Instantiate arguments
+    args = Args()
+    args.run_dir = run_dir
+    args.train_timesteps = 50_000 #100_000
+    args.eval_timesteps = 50_000 #50_000
+    args.buffer_size = 1_000_000
+
+    args.prepopulate_buffer_hard_cap = 100_000 #100_000
+    args.max_nway_interact = 6
+    args.max_traj_per_interact = 5
+
+    args.env_id = None
+    args.cx_mode = None
+    args.seed = None
+    args.exp_dir = None
+
+    args.save_config(os.path.join(run_dir, "config.json"))
+
+    # Load random seeds
+    with open("seeds_list.json", "r") as io:
+        seeds = json.load(io)[:use_n_seeds]
+
     # Specify MuJoCo tasks
     env_ids = [
-        # "Ant-v4",
+        "Ant-v4",
         "HalfCheetah-v4",
         # "Hopper-v4", #TODO: fix XML file
         # "Humanoid-v4",
         # "Walker2d-v4", #TODO: fix XML file
     ]
 
+    # Loop over environments
     for env_id in env_ids:
-        print(gym.spec(env_id))
-        env = gym.make(env_id, render_mode="rgb_array")
-        print(env.observation_space)
-        print(env.action_space)
+        args.env_id = env_id
 
-        # Specify CausalExplorer mode
+        # Loop over buffer prepopulation modes
         for cx_mode in ["causal", "random"]:
-            print(f"Starting env '{env_id}', cx_mode: {cx_mode} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
+            args.cx_mode = cx_mode
 
-            # Set experiment suffix
-            exp_suffix = "_241115v2"
+            # Loop over seeds
+            for seed in seeds:
+                args.seed = seed
+                args.update_exp_dir()
+                os.makedirs(args.exp_dir, exist_ok=True)
 
-            # Train agent
-            train_args = Args()
-            train_args.exp_name = f"SAC_train_{cx_mode}{exp_suffix}"
-            train_args.env_id = env_id
-            train_args.seed = 22
-            train_args.total_timesteps = 100_000
-            train_args.buffer_size = 1_000_000
-            train_args.prepopulate_buffer_method = cx_mode
-            train_args.prepopulate_buffer_hard_cap = 100_000
-            train_args.gen_run_name()
-
-            train_SAC(train_args)
-
-            # Evaluate agent
-            eval_args = Args()
-            eval_args.exp_name = f"SAC_eval_{cx_mode}{exp_suffix}"
-            eval_args.env_id = env_id
-            eval_args.seed = 22
-            eval_args.total_timesteps = 50_000
-            eval_args.gen_run_name()
-            
-            actor_path = f"runs/{train_args.run_name}/actor.pth"
-            eval_SAC(eval_args, actor_path=actor_path)
-
-        # Analyze results
-        ##------------------##
-        # Plot episode rewards and lengths
-        for metric in ["rewards", "lengths"]:
-            fig, axes = plt.subplots(1, 2, figsize=(8,6))
-            for cx_mode in ["causal", "random"]:
-                # Generate run name
-                train_args.exp_name = f"SAC_train_{cx_mode}{exp_suffix}"
-                train_args.gen_run_name()
-                eval_args.exp_name = f"SAC_eval_{cx_mode}{exp_suffix}"
-                eval_args.gen_run_name()
-                # Load data
-                with open(f"runs/{train_args.run_name}/episode_{metric}.json", "r") as io:
-                    train_episode_data = json.load(io)
-                with open(f"runs/{eval_args.run_name}/episode_{metric}.json", "r") as io:
-                    eval_episode_data = json.load(io)
-                # Plot data
-                sns.lineplot(
-                    x=range(len(train_episode_data)),
-                    y=train_episode_data,
-                    ax=axes[0],
-                    label=cx_mode,
-                )
-                sns.lineplot(
-                    x=range(len(eval_episode_data)),
-                    y=eval_episode_data,
-                    ax=axes[1],
-                    label=cx_mode,
-                )
-            axes[0].set_title("Training")
-            axes[1].set_title("Evaluation")
-            fig.suptitle(f"Episode {metric}: {env_id.title()}")
-            fig.savefig(f"runs/{eval_args.run_name}/episode_{metric}.png")
+                # Run experiment
+                print(f"Starting experiment {args.exp_dir} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
+                run_experiment(args)
+    
+    # Record end time and report progress
+    end_time = time.strftime('%Y-%m-%d %H:%M:%S')
+    print(f"Run start time: {start_time} \nRun end time: {end_time}")
