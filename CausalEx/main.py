@@ -1,4 +1,6 @@
+from dataclasses import replace
 import json
+import multiprocessing as mp
 import os
 import random
 import time
@@ -23,6 +25,9 @@ from utils import save_video
 
 # Largely based on CleanRL SAC implementation
 def run_experiment(args):
+
+    current_time = time.strftime('%Y-%m-%d %H:%M:%S')
+    print(f'Starting experiment {args.exp_dir} on PID {os.getpid()} at {current_time}.')
 
     # TRY NOT TO MODIFY: seeding
     random.seed(args.seed)
@@ -280,6 +285,12 @@ def run_experiment(args):
 
 if __name__ == "__main__":
 
+    # Set up multiprocessing
+    num_cores = os.cpu_count()
+    num_workers = num_cores // 2
+    process_args = []
+
+    # Specify number of seeds to test
     use_n_seeds = 10 # max is currently 100
 
     # Record start time
@@ -323,21 +334,29 @@ if __name__ == "__main__":
 
     # Loop over environments
     for env_id in env_ids:
-        args.env_id = env_id
 
         # Loop over buffer prepopulation modes
         for cx_mode in ["causal", "random"]:
-            args.cx_mode = cx_mode
 
             # Loop over seeds
             for seed in seeds:
-                args.seed = seed
-                args.update_exp_dir()
-                os.makedirs(args.exp_dir, exist_ok=True)
 
-                # Run experiment
-                print(f"Starting experiment {args.exp_dir} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
-                run_experiment(args)
+                # Create copy of dataclass with updated experiment parameters
+                args_copy = replace(
+                    args,
+                    env_id=env_id,
+                    cx_mode=cx_mode,
+                    seed=seed,
+                )
+                args_copy.update_exp_dir()
+                os.makedirs(args_copy.exp_dir, exist_ok=True)
+
+                # Add experiment-specific arguments to processes list
+                process_args.append(args_copy)
+
+    # Start processes
+    with mp.Pool(processes=num_workers) as pool:
+        pool.map(run_experiment, process_args)
     
     # Record end time and report progress
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
