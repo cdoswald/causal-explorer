@@ -42,9 +42,13 @@ class Args:
     # Causal Explorer-specific arguments
     prepopulate_buffer_method: str = "causal"
     """method for prepopulating replay buffer; options are {'causal', 'random'}"""
-    prepopulate_buffer_hard_cap: int = 100000
+    prepopulate_buffer_hard_cap: int = 100_000
     """hard maximum for total number of observations to prepopulate in replay buffer"""
-    max_nway_interact: int = 10
+    max_nway_interact: int = 6
     """maximum n-way interactions to test"""
-    max_traj_per_interact: int = 50
+    max_traj_per_interact: int = 2
     """number of trajectories to run per n-way interaction"""
+
+    def gen_run_name(self):
+        # create run name
+        self.run_name = f"{self.env_id}__{self.exp_name}__{self.seed}"

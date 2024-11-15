@@ -1,8 +1,11 @@
+import json
 import os
 import random
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 import gymnasium as gym
 from gymnasium.experimental.wrappers.rendering import RecordVideoV0 as RecordVideo
@@ -20,9 +23,7 @@ from utils import save_video
 
 # Modified version of CleanRL SAC implementation
 def train_SAC(args):
-    # run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
-    run_name = f"{args.env_id}__{args.exp_name}__{args.seed}"
-    writer = SummaryWriter(f"runs/{run_name}")
+    writer = SummaryWriter(f"runs/{args.run_name}")
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -86,6 +87,8 @@ def train_SAC(args):
     #TODO: print non-empty buffer size here
 
     # TRY NOT TO MODIFY: start the game
+    episode_rewards = []
+    episode_lengths = []
     episode_reward = 0
     episode_length = 0
     obs, _ = env.reset(seed=args.seed)
@@ -111,6 +114,8 @@ def train_SAC(args):
         episode_reward += rewards
         episode_length += 1
         if "episode" in infos:
+            episode_rewards.append(episode_reward)
+            episode_lengths.append(episode_length)
             print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
             writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
             writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
@@ -191,9 +196,15 @@ def train_SAC(args):
                     writer.add_scalar("losses/alpha_loss", alpha_loss.item(), global_step)
 
     # Save models
-    torch.save(actor.state_dict(), f"runs/{run_name}/actor.pth")
-    torch.save(qf1.state_dict(), f"runs/{run_name}/qf1.pth")
-    torch.save(qf2.state_dict(), f"runs/{run_name}/qf2.pth")
+    torch.save(actor.state_dict(), f"runs/{args.run_name}/actor.pth")
+    torch.save(qf1.state_dict(), f"runs/{args.run_name}/qf1.pth")
+    torch.save(qf2.state_dict(), f"runs/{args.run_name}/qf2.pth")
+
+    # Save metrics
+    with open(f"runs/{args.run_name}/episode_rewards.json", "w") as io:
+        json.dump(episode_rewards, io)
+    with open(f"runs/{args.run_name}/episode_lengths.json", "w") as io:
+        json.dump(episode_lengths, io)
 
     # Clean up
     env.close()
@@ -202,9 +213,7 @@ def train_SAC(args):
 
 def eval_SAC(args, actor_path):
     """Evaluate trained SAC agent"""
-    # run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
-    run_name = f"{args.env_id}__{args.exp_name}__{args.seed}"
-    writer = SummaryWriter(f"runs/{run_name}")
+    writer = SummaryWriter(f"runs/{args.run_name}")
     writer.add_text(
         "hyperparameters",
         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
@@ -220,11 +229,11 @@ def eval_SAC(args, actor_path):
 
     # env setup
     env = gym.make(args.env_id, render_mode="rgb_array")
-    videos_dir = f"videos/{run_name}"
+    videos_dir = f"videos/{args.run_name}"
     os.makedirs(videos_dir, exist_ok=True)
     # env = RecordVideo(
     #     env,
-    #     f"videos/{run_name}",
+    #     f"videos/{args.run_name}",
     #     episode_trigger=lambda episode_id: episode_id % 20 == 0,
     # )
     env = gym.wrappers.RecordEpisodeStatistics(env)
@@ -238,9 +247,11 @@ def eval_SAC(args, actor_path):
     actor.load_state_dict(torch.load(actor_path, weights_only=True))
 
     # TRY NOT TO MODIFY: start the game
+    episode_rewards = []
+    episode_lengths = []
+    episode_frames = []
     episode_reward = 0
     episode_length = 0
-    episode_frames = []
     episode_idx = 0
     obs, _ = env.reset(seed=args.seed)
     for global_step in range(args.total_timesteps):
@@ -258,6 +269,8 @@ def eval_SAC(args, actor_path):
         episode_reward += rewards
         episode_length += 1
         if "episode" in infos:
+            episode_rewards.append(episode_reward)
+            episode_lengths.append(episode_length)
             print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
             writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
             writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
@@ -279,6 +292,12 @@ def eval_SAC(args, actor_path):
             # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
             obs = next_obs
 
+    # Save metrics
+    with open(f"runs/{args.run_name}/episode_rewards.json", "w") as io:
+        json.dump(episode_rewards, io)
+    with open(f"runs/{args.run_name}/episode_lengths.json", "w") as io:
+        json.dump(episode_lengths, io)
+
     # Clean up
     env.close()
     writer.close()
@@ -288,10 +307,10 @@ if __name__ == "__main__":
 
     # Specify MuJoCo tasks
     env_ids = [
-        "Ant-v4",
+        # "Ant-v4",
         "HalfCheetah-v4",
         # "Hopper-v4", #TODO: fix XML file
-        "Humanoid-v4",
+        # "Humanoid-v4",
         # "Walker2d-v4", #TODO: fix XML file
     ]
 
@@ -304,25 +323,64 @@ if __name__ == "__main__":
         # Specify CausalExplorer mode
         for cx_mode in ["causal", "random"]:
             print(f"Starting env '{env_id}', cx_mode: {cx_mode} ({time.strftime('%Y-%m-%d %H:%M:%S')})")
-    
+
+            # Set experiment suffix
+            exp_suffix = "_241115v2"
+
             # Train agent
             train_args = Args()
-            train_args.exp_name = f"SAC_baseline_train_{cx_mode}"
+            train_args.exp_name = f"SAC_train_{cx_mode}{exp_suffix}"
             train_args.env_id = env_id
-            train_args.seed = 42
-            train_args.total_timesteps = 100000
-            train_args.buffer_size = 1000000
+            train_args.seed = 22
+            train_args.total_timesteps = 100_000
+            train_args.buffer_size = 1_000_000
             train_args.prepopulate_buffer_method = cx_mode
-            train_args.prepopulate_buffer_hard_cap = 1000000
+            train_args.prepopulate_buffer_hard_cap = 100_000
+            train_args.gen_run_name()
 
             train_SAC(train_args)
 
             # Evaluate agent
             eval_args = Args()
-            eval_args.exp_name = f"SAC_baseline_eval_{cx_mode}"
+            eval_args.exp_name = f"SAC_eval_{cx_mode}{exp_suffix}"
             eval_args.env_id = env_id
-            eval_args.seed = 42
-            eval_args.total_timesteps = 10000
+            eval_args.seed = 22
+            eval_args.total_timesteps = 50_000
+            eval_args.gen_run_name()
             
-            actor_path = f"runs/{train_args.env_id}__{train_args.exp_name}__{train_args.seed}/actor.pth"
+            actor_path = f"runs/{train_args.run_name}/actor.pth"
             eval_SAC(eval_args, actor_path=actor_path)
+
+        # Analyze results
+        ##------------------##
+        # Plot episode rewards and lengths
+        for metric in ["rewards", "lengths"]:
+            fig, axes = plt.subplots(1, 2, figsize=(8,6))
+            for cx_mode in ["causal", "random"]:
+                # Generate run name
+                train_args.exp_name = f"SAC_train_{cx_mode}{exp_suffix}"
+                train_args.gen_run_name()
+                eval_args.exp_name = f"SAC_eval_{cx_mode}{exp_suffix}"
+                eval_args.gen_run_name()
+                # Load data
+                with open(f"runs/{train_args.run_name}/episode_{metric}.json", "r") as io:
+                    train_episode_data = json.load(io)
+                with open(f"runs/{eval_args.run_name}/episode_{metric}.json", "r") as io:
+                    eval_episode_data = json.load(io)
+                # Plot data
+                sns.lineplot(
+                    x=range(len(train_episode_data)),
+                    y=train_episode_data,
+                    ax=axes[0],
+                    label=cx_mode,
+                )
+                sns.lineplot(
+                    x=range(len(eval_episode_data)),
+                    y=eval_episode_data,
+                    ax=axes[1],
+                    label=cx_mode,
+                )
+            axes[0].set_title("Training")
+            axes[1].set_title("Evaluation")
+            fig.suptitle(f"Episode {metric}: {env_id.title()}")
+            fig.savefig(f"runs/{eval_args.run_name}/episode_{metric}.png")
