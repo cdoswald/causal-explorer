@@ -5,9 +5,7 @@ import os
 import random
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
 import gymnasium as gym
 from gymnasium.experimental.wrappers.rendering import RecordVideoV0 as RecordVideo
