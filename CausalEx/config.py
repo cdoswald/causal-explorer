@@ -39,7 +39,7 @@ class Args:
     """the discount factor gamma"""
     tau: float = 0.005
     """target smoothing coefficient (default: 0.005)"""
-    batch_size: int = 256
+    batch_size: int = 512
     """the batch size of sample from the reply memory"""
     learning_starts: int = 0 # original value = 5e3
     """timestep to start learning"""
@@ -47,9 +47,9 @@ class Args:
     """the learning rate of the policy network optimizer"""
     q_lr: float = 1e-3
     """the learning rate of the Q network network optimizer"""
-    policy_frequency: int = 2
+    policy_frequency: int = 64
     """the frequency of training policy (delayed)"""
-    target_network_frequency: int = 1  # Denis Yarats' implementation delays this by 2.
+    target_network_frequency: int = 2  # Denis Yarats' implementation delays this by 2.
     """the frequency of updates for the target nerworks"""
     alpha: float = 0.2
     """Entropy regularization coefficient."""
@@ -61,7 +61,7 @@ class Args:
     """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_nway_interact: int = 6
     """maximum n-way interactions to test"""
-    max_traj_per_interact: int = 2
+    max_traj_per_interact: int = 5
     """number of trajectories to run per n-way interaction"""
 
 
