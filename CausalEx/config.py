@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import json
 import os
-import time
 
 
 # Largely based on CleanRL SAC implementation
@@ -22,7 +21,9 @@ class Args:
     """seed of the experiment"""
 
     # Directories
-    run_dir: str = f"run_{int(time.time())}"
+    run_name = "SAC_241115v1"
+    """unique name to identify run"""
+    run_dir: str = os.path.join("runs", run_name)
     """directory to store all experiment results"""
     exp_dir: str = os.path.join(run_dir, f"env_{env_id}_mode_{cx_mode}_seed_{seed}")
     """subdirectory to store specific experiment results"""
@@ -74,3 +75,6 @@ class Args:
         self.exp_dir = os.path.join(
             self.run_dir, f"env_{self.env_id}_mode_{self.cx_mode}_seed_{self.seed}"
         )
+    
+    def __post_init__(self) -> None:
+        os.makedirs(self.run_dir, exist_ok=True)

@@ -294,14 +294,9 @@ if __name__ == "__main__":
     # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
-    # Specify run name
-    run_name = "SAC_241115v1"
-    run_dir = os.path.join("runs", run_name)
-    os.makedirs(run_dir, exist_ok=True)
-
     # Instantiate arguments
     args = Args()
-    args.run_dir = run_dir
+
     args.train_timesteps = 50_000 #100_000
     args.eval_timesteps = 50_000 #50_000
     args.buffer_size = 1_000_000
@@ -315,7 +310,7 @@ if __name__ == "__main__":
     args.seed = None
     args.exp_dir = None
 
-    args.save_config(os.path.join(run_dir, "config.json"))
+    args.save_config(os.path.join(args.run_dir, "config.json"))
 
     # Load random seeds
     with open("seeds_list.json", "r") as io:
@@ -326,7 +321,7 @@ if __name__ == "__main__":
         "Ant-v4",
         "HalfCheetah-v4",
         # "Hopper-v4", #TODO: fix XML file
-        # "Humanoid-v4",
+        "Humanoid-v4",
         # "Walker2d-v4", #TODO: fix XML file
     ]
 

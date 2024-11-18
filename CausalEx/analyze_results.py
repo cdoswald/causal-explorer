@@ -11,20 +11,15 @@ from config import Args
 
 if __name__ == "__main__":
 
-    # Specify run name
-    run_name = "SAC_241115v1"
-    run_dir = os.path.join("runs", run_name)
-
     # Instantiate arguments
     args = Args()
-    args.run_dir = run_dir
 
     # Specify MuJoCo tasks
     env_ids = [
         "Ant-v4",
         "HalfCheetah-v4",
         # "Hopper-v4", #TODO: fix XML file
-        # "Humanoid-v4",
+        "Humanoid-v4",
         # "Walker2d-v4", #TODO: fix XML file
     ]
 
