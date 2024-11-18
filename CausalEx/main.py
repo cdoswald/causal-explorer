@@ -289,23 +289,14 @@ if __name__ == "__main__":
     process_args = []
 
     # Specify number of seeds to test
-    use_n_seeds = 10 # max is currently 100
+    use_n_seeds = 20 # max is currently 100
 
     # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
     # Instantiate arguments
     args = Args()
-
-    args.train_timesteps = 50_000 #100_000
-    args.eval_timesteps = 50_000 #50_000
-    args.buffer_size = 1_000_000
-
-    args.prepopulate_buffer_hard_cap = 100_000 #100_000
-    args.max_nway_interact = 6
-    args.max_traj_per_interact = 5
-
-    args.env_id = None
+    args.env_id = None # note that these args will be set for each experiment
     args.cx_mode = None
     args.seed = None
     args.exp_dir = None
