@@ -16,7 +16,7 @@ class SoftQNetwork(nn.Module):
         self.fc2 = nn.Linear(256, 256)
         self.fc3 = nn.Linear(256, 1)
         self.bn1 = nn.BatchNorm1d(256)
-        self.bn2 = nn.BatchNorm2d(256)
+        self.bn2 = nn.BatchNorm1d(256)
 
     def forward(self, x, a):
         x = torch.cat([x, a], 1)
@@ -35,7 +35,7 @@ class Actor(nn.Module):
         self.fc_mean = nn.Linear(256, np.prod(env.action_space.shape))
         self.fc_logstd = nn.Linear(256, np.prod(env.action_space.shape))
         self.bn1 = nn.BatchNorm1d(256)
-        self.bn2 = nn.BatchNorm2d(256)
+        self.bn2 = nn.BatchNorm1d(256)
         # action rescaling
         self.register_buffer(
             "action_scale", torch.tensor((env.action_space.high - env.action_space.low) / 2.0, dtype=torch.float32)
