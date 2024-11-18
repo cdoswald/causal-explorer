@@ -15,13 +15,11 @@ class SoftQNetwork(nn.Module):
         self.fc1 = nn.Linear(np.array(env.observation_space.shape).prod() + np.prod(env.action_space.shape), 256)
         self.fc2 = nn.Linear(256, 256)
         self.fc3 = nn.Linear(256, 1)
-        self.bn1 = nn.BatchNorm1d(256)
-        self.bn2 = nn.BatchNorm1d(256)
 
     def forward(self, x, a):
         x = torch.cat([x, a], 1)
-        x = self.bn1(F.relu(self.fc1(x)))
-        x = self.bn2(F.relu(self.fc2(x)))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
@@ -34,8 +32,6 @@ class Actor(nn.Module):
         self.fc2 = nn.Linear(256, 256)
         self.fc_mean = nn.Linear(256, np.prod(env.action_space.shape))
         self.fc_logstd = nn.Linear(256, np.prod(env.action_space.shape))
-        self.bn1 = nn.BatchNorm1d(256)
-        self.bn2 = nn.BatchNorm1d(256)
         # action rescaling
         self.register_buffer(
             "action_scale", torch.tensor((env.action_space.high - env.action_space.low) / 2.0, dtype=torch.float32)
@@ -45,8 +41,8 @@ class Actor(nn.Module):
         )
 
     def forward(self, x):
-        x = self.bn1(F.relu(self.fc1(x)))
-        x = self.bn2(F.relu(self.fc2(x)))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
         mean = self.fc_mean(x)
         log_std = self.fc_logstd(x)
         log_std = torch.tanh(log_std)
