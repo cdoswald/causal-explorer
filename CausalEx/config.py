@@ -21,7 +21,7 @@ class Args:
     """seed of the experiment"""
 
     # Directories
-    run_name = "SAC_241115v1"
+    run_name = "SAC_241118v1"
     """unique name to identify run"""
     run_dir: str = os.path.join("runs", run_name)
     """directory to store all experiment results"""
