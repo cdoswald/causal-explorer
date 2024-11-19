@@ -82,6 +82,7 @@ def run_experiment(args):
     #TODO: print non-empty buffer size here
 
     # TRY NOT TO MODIFY: start the game
+    loss_dict = {"critic1":{}, "critic2":{}, "actor":{}, "alpha":{}}
     episode_rewards = []
     episode_lengths = []
     episode_reward = 0
@@ -138,12 +139,18 @@ def run_experiment(args):
             qf2_loss = F.mse_loss(qf2_a_values, next_q_value)
             qf_loss = qf1_loss + qf2_loss
 
+            # record losses
+            loss_dict["critic1"][global_step] = qf1_loss.item()
+            loss_dict["critic2"][global_step] = qf2_loss.item()
+
             # optimize the model
             q_optimizer.zero_grad()
             qf_loss.backward()
             q_optimizer.step()
 
             if global_step % args.policy_frequency == 0:  # TD 3 Delayed update support
+                temp_actor_losses = []
+                temp_alpha_losses = []
                 for _ in range(
                     args.policy_frequency
                 ):  # compensate for the delay by doing 'actor_update_interval' instead of 1
@@ -152,6 +159,7 @@ def run_experiment(args):
                     qf2_pi = qf2(data.observations, pi)
                     min_qf_pi = torch.min(qf1_pi, qf2_pi)
                     actor_loss = ((alpha * log_pi) - min_qf_pi).mean()
+                    temp_actor_losses.append(actor_loss.item())
 
                     actor_optimizer.zero_grad()
                     actor_loss.backward()
@@ -161,11 +169,16 @@ def run_experiment(args):
                         with torch.no_grad():
                             _, log_pi, _ = actor.get_action(data.observations)
                         alpha_loss = (-log_alpha.exp() * (log_pi + target_entropy)).mean()
+                        temp_alpha_losses.append(alpha_loss.item())
 
                         a_optimizer.zero_grad()
                         alpha_loss.backward()
                         a_optimizer.step()
                         alpha = log_alpha.exp().item()
+
+                # record losses
+                loss_dict["actor"][global_step] = temp_actor_losses
+                loss_dict["alpha"][global_step] = temp_alpha_losses
 
             # update the target networks
             if global_step % args.target_network_frequency == 0:
@@ -180,10 +193,14 @@ def run_experiment(args):
     torch.save(qf2.state_dict(), os.path.join(args.exp_dir, "qf2.pth"))
 
     # Save metrics
-    with open(os.path.join(args.exp_dir, f"episode_rewards.json"), "w") as io:
+    with open(os.path.join(args.exp_dir, "episode_rewards.json"), "w") as io:
         json.dump(episode_rewards, io)
     with open(os.path.join(args.exp_dir, "episode_lengths.json"), "w") as io:
         json.dump(episode_lengths, io)
+
+    # Save loss data
+    with open(os.path.join(args.exp_dir, "loss_data.json"), "w") as io:
+        json.dump(loss_dict, io)
 
     # Clean up
     env.close()
