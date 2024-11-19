@@ -3,7 +3,7 @@ import json
 import os
 
 
-# Largely based on CleanRL SAC implementation
+# Based on CleanRL SAC implementation
 @dataclass
 class Args:
     # General settings
@@ -21,7 +21,7 @@ class Args:
     """seed of the experiment"""
 
     # Directories
-    run_name = "SAC_241118v1"
+    run_name = "SAC_241119v2"
     """unique name to identify run"""
     run_dir: str = os.path.join("runs", run_name)
     """directory to store all experiment results"""
@@ -29,7 +29,7 @@ class Args:
     """subdirectory to store specific experiment results"""
 
     # RL algorithm-specific arguments
-    train_timesteps: int = 100_000
+    train_timesteps: int = 100_000 #100_000
     """total training timesteps of the experiments"""
     eval_timesteps: int = 50_000
     """total evaluation timesteps of the experiments"""
@@ -57,11 +57,11 @@ class Args:
     """automatic tuning of the entropy coefficient"""
 
     # Causal Explorer-specific arguments
-    prepopulate_buffer_hard_cap: int = 100_000
+    prepopulate_buffer_hard_cap: int = 100_000 # 100_000
     """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_nway_interact: int = 6
     """maximum n-way interactions to test"""
-    max_traj_per_interact: int = 5
+    max_traj_per_interact: int = 1000
     """number of trajectories to run per n-way interaction"""
 
 
