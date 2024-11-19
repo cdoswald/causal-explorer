@@ -11,6 +11,9 @@ from config import RunArgs
 
 if __name__ == "__main__":
 
+    # Specify formatting constants
+    colors = {"causal":"blue", "random":"green"}
+
     # Instantiate run arguments (applies to all experiments)
     run_args = RunArgs()
     run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
@@ -18,8 +21,10 @@ if __name__ == "__main__":
     # Loop over environments
     for env_id in run_args.env_ids:
 
+        ###################################
+        ## Average Episode Reward/Length ##
+        ###################################
         # Loop over buffer prepopulation modes
-        colors = {"causal":"blue", "random":"green"}
         fig, axes = plt.subplots(1, 2, figsize=(16,6))
         for cx_mode in run_args.cx_modes:
 
@@ -88,3 +93,63 @@ if __name__ == "__main__":
             os.path.join(run_args.run_dir, f"env_{env_id}_metrics.png"),
             bbox_inches="tight",
         )
+
+        ###################################
+        ## Actor and Critic Model Losses ##
+        ###################################
+        # Loop over buffer prepopulation modes
+        fig, axes = plt.subplots(1, 4, figsize=(16,6))
+        for cx_mode in run_args.cx_modes:
+
+            # Get all experiment folders
+            exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
+            exp_dirs = [f for f in glob.glob(exp_folder_pattern) if os.path.isdir(f)]
+
+            # Load loss data
+            loss_data_all = []
+            for exp_dir in exp_dirs:
+                with open(os.path.join(exp_dir, f"loss_data.json"), "r") as io:
+                    loss_data_all.append(json.load(io))
+            
+            # Unnest loss data and create matrices of shape (n_steps, m_experiments)
+            ## TODO: truncate for same size?
+            critic1_losses = np.array([v for exp in loss_data_all for v in exp["critic1"].values()]).T
+            critic2_losses = np.array([v for exp in loss_data_all for v in exp["critic2"].values()]).T
+
+            # Structure of loss data dict
+        #     {
+        #         critic1: {
+        #             step1: loss,
+        #             ...
+        #         },
+        #         critic2: {
+        #             step1: loss,
+        #             ...
+        #         },
+        #         actor: {
+        #             step64: [loss1, loss2, ...],
+        #             step128: [loss1, loss2, ...],
+        #             ...
+        #         },
+        #         alpha: {
+        #             step64: [loss1, loss2, ...],
+        #             step128: [loss1, loss2, ...],
+        #             ...
+        #         },
+        #     }
+        # ]
+
+
+
+            # # Clip metrics lists so that all seeds have same number of episodes
+            # min_num_episodes = min([len(exp) for exp in exp_rewards_all])
+            # rewards = np.array([exp[:min_num_episodes] for exp in exp_rewards_all]).T
+            # lengths = np.array([exp[:min_num_episodes] for exp in exp_lengths_all]).T
+
+            # # Calculate mean and standard dev of metrics across all seeds
+            # avg_episode_reward = np.mean(rewards, axis=1)
+            # avg_episode_length = np.mean(lengths, axis=1)
+            # sd_episode_reward = np.std(rewards, axis=1)
+            # sd_episode_length = np.std(lengths, axis=1)
+
+            
