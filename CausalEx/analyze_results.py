@@ -6,33 +6,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from config import Args
+from config import RunArgs
 
 
 if __name__ == "__main__":
 
-    # Instantiate arguments
-    args = Args()
-
-    # Specify MuJoCo tasks
-    env_ids = [
-        "Ant-v4",
-        "HalfCheetah-v4",
-        # "Hopper-v4", #TODO: fix XML file
-        "Humanoid-v4",
-        # "Walker2d-v4", #TODO: fix XML file
-    ]
+    # Instantiate run arguments (applies to all experiments)
+    run_args = RunArgs()
+    run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
 
     # Loop over environments
-    for env_id in env_ids:
+    for env_id in run_args.env_ids:
 
         # Loop over buffer prepopulation modes
         colors = {"causal":"blue", "random":"green"}
         fig, axes = plt.subplots(1, 2, figsize=(16,6))
-        for cx_mode in ["causal", "random"]:
+        for cx_mode in run_args.cx_modes:
 
             # Get all experiment folders
-            exp_folder_pattern = os.path.join(args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
+            exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
             exp_dirs = [f for f in glob.glob(exp_folder_pattern) if os.path.isdir(f)]
 
             # Load metrics
@@ -93,6 +85,6 @@ if __name__ == "__main__":
         axes[1].set_title("Average episode length")
         fig.suptitle(f"Environment: {env_id}")
         fig.savefig(
-            os.path.join(args.run_dir, f"env_{env_id}_metrics.png"),
+            os.path.join(run_args.run_dir, f"env_{env_id}_metrics.png"),
             bbox_inches="tight",
         )

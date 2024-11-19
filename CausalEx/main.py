@@ -16,7 +16,7 @@ from stable_baselines3.common.buffers import ReplayBuffer
 from torch.utils.tensorboard import SummaryWriter
 
 from causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
-from config import Args
+from config import RunArgs, ExperimentArgs
 from models import Actor, SoftQNetwork
 from utils import save_video
 
@@ -311,49 +311,36 @@ if __name__ == "__main__":
     # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
-    # Instantiate arguments
-    args = Args()
-    args.env_id = None # note that these args will be set for each experiment
-    args.cx_mode = None
-    args.seed = None
-    args.exp_dir = None
-
-    args.save_config(os.path.join(args.run_dir, "config.json"))
+    # Instantiate run arguments (applies to all experiments)
+    run_args = RunArgs()
+    run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
 
     # Load random seeds
     with open("seeds_list.json", "r") as io:
         seeds = json.load(io)[:use_n_seeds]
 
-    # Specify MuJoCo tasks
-    env_ids = [
-        "Ant-v4",
-        "HalfCheetah-v4",
-        # "Hopper-v4", #TODO: fix XML file
-        "Humanoid-v4",
-        # "Walker2d-v4", #TODO: fix XML file
-    ]
-
     # Loop over environments
-    for env_id in env_ids:
+    for env_id in run_args.env_ids:
 
         # Loop over buffer prepopulation modes
-        for cx_mode in ["causal", "random"]:
+        for cx_mode in run_args.cx_modes:
 
             # Loop over seeds
             for seed in seeds:
 
-                # Create copy of dataclass with updated experiment parameters
-                args_copy = replace(
-                    args,
+                # Create experiment arguments
+                exp_args = ExperimentArgs(
                     env_id=env_id,
                     cx_mode=cx_mode,
                     seed=seed,
                 )
-                args_copy.update_exp_dir()
-                os.makedirs(args_copy.exp_dir, exist_ok=True)
+                exp_args.create_exp_dir()
+                exp_args.save_config(
+                    os.path.join(exp_args.exp_dir, "exp_config.json")
+                )
 
                 # Add experiment-specific arguments to processes list
-                process_args.append(args_copy)
+                process_args.append(exp_args)
 
     # Start processes
     with mp.Pool(processes=num_workers) as pool:

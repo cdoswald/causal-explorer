@@ -1,11 +1,39 @@
 from dataclasses import dataclass
 import json
 import os
+from typing import Optional, Tuple
 
+
+@dataclass
+class RunArgs:
+    run_name = "SAC_241119v2"
+    """unique name to identify run"""
+    run_dir: str = os.path.join("runs", run_name)
+    """directory to store all experiment results"""
+    env_ids: Tuple[str] = (
+        "Ant-v4",
+        "HalfCheetah-v4",
+        # "Hopper-v4", #TODO: fix XML file
+        "Humanoid-v4",
+        # "Walker2d-v4", #TODO: fix XML file
+    )
+    """list of MuJoCo environments to use in experiments"""
+    cx_modes: Tuple[str] = ("causal", "random")
+    """replay buffer prepopulation methods to test; options: {'causal', 'random'}"""
+
+    def __post_init__(self) -> None:
+        os.makedirs(self.run_dir, exist_ok=True)
+
+    def save_config(self, path) -> None:
+        """Save configuration parameters for reference."""
+        with open(path, "w") as file:
+            json.dump(self.__dict__, file, indent=4)
+    
 
 # Based on CleanRL SAC implementation
 @dataclass
-class Args:
+class ExperimentArgs(RunArgs):
+
     # General settings
     torch_deterministic: bool = True
     """if toggled, `torch.backends.cudnn.deterministic=False`"""
@@ -13,20 +41,12 @@ class Args:
     """if toggled, cuda will be enabled by default"""
 
     # Experiment settings
-    env_id: str = "Hopper-v4"
+    env_id: Optional[str] = None
     """the environment id of the task"""
-    cx_mode: str = "causal"
+    cx_mode: Optional[str] = None
     """method for prepopulating replay buffer; options: {'causal', 'random'}"""
-    seed: int = 1
+    seed: Optional[int] = None
     """seed of the experiment"""
-
-    # Directories
-    run_name = "SAC_241119v2"
-    """unique name to identify run"""
-    run_dir: str = os.path.join("runs", run_name)
-    """directory to store all experiment results"""
-    exp_dir: str = os.path.join(run_dir, f"env_{env_id}_mode_{cx_mode}_seed_{seed}")
-    """subdirectory to store specific experiment results"""
 
     # RL algorithm-specific arguments
     train_timesteps: int = 100_000 #100_000
@@ -65,16 +85,14 @@ class Args:
     """number of trajectories to run per n-way interaction"""
 
 
+    def create_exp_dir(self) -> None:
+        """Create experiment directory based on run name, env_id, cx_mode, and seed."""
+        self.exp_dir = os.path.join(
+            self.run_dir, f"env_{self.env_id}_mode_{self.cx_mode}_seed_{self.seed}"
+        )
+        os.makedirs(self.exp_dir, exist_ok=True)
+
     def save_config(self, path) -> None:
         """Save configuration parameters for reference."""
         with open(path, "w") as file:
             json.dump(self.__dict__, file, indent=4)
-    
-    def update_exp_dir(self) -> None:
-        """Update experiment directory if run directory, env_id, or seed changes."""
-        self.exp_dir = os.path.join(
-            self.run_dir, f"env_{self.env_id}_mode_{self.cx_mode}_seed_{self.seed}"
-        )
-    
-    def __post_init__(self) -> None:
-        os.makedirs(self.run_dir, exist_ok=True)
