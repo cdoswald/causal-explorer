@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 @dataclass
 class RunArgs:
-    run_name = "SAC_241119v2"
+    run_name = "SAC_241120v1"
     """unique name to identify run"""
     run_dir: str = os.path.join("runs", run_name)
     """directory to store all experiment results"""
@@ -79,10 +79,10 @@ class ExperimentArgs(RunArgs):
     # Causal Explorer-specific arguments
     prepopulate_buffer_hard_cap: int = 100_000 # 100_000
     """hard maximum for total number of observations to prepopulate in replay buffer"""
-    max_nway_interact: int = 6
-    """maximum n-way interactions to test"""
-    max_traj_per_interact: int = 1000
-    """number of trajectories to run per n-way interaction"""
+    # max_nway_interact: int = 6
+    # """maximum n-way interactions to test"""
+    max_steps_per_interact: int = 1000
+    """number of environment steps to run per n-way interaction"""
 
 
     def create_exp_dir(self) -> None:
