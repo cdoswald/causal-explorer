@@ -339,6 +339,9 @@ if __name__ == "__main__":
                     os.path.join(exp_args.exp_dir, "exp_config.json")
                 )
 
+                # # debug experiment
+                # run_experiment(exp_args)
+
                 # Add experiment-specific arguments to processes list
                 process_args.append(exp_args)
 
