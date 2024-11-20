@@ -63,53 +63,43 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
 
     # Generate experimental data
     obs, _ = env.reset(seed=(args.seed + ADJUST_SEED))
-    episode_reward = 0
-    episode_length = 0
     saved_obs = 0
+    buffer_cap_reached = False
     for idx, unmask_cols in enumerate(interaction_col_idxs):
-        # Implement hard cap on number of saved observations
-        if saved_obs > args.prepopulate_buffer_hard_cap:
+        # Break loop if hard cap reached on number of saved observations
+        if buffer_cap_reached:
             print(f"Reached hard cap of {args.prepopulate_buffer_hard_cap} observations")
             break
         print(f"Generating unique interaction: {idx+1} / {len(interaction_col_idxs)} " +
               f" ({time.strftime('%Y-%m-%d %H:%M:%S')})")
+        # Create action mask array
         mask_array = np.ones((n_action_dims,), dtype=bool)
         mask_array[[col_idx for col_idx in unmask_cols]] = False
-        for traj_idx in range(args.max_traj_per_interact):
-            # Implement hard cap on number of saved observations
-            if saved_obs > args.prepopulate_buffer_hard_cap:
-                break
-            # Iterate through entire trajectory
+        # Iterate through interaction loop
+        interact_steps = 0
+        interact_steps_max_reached = False
+        while not (buffer_cap_reached or interact_steps_max_reached):
+            # Iterate through RL environment
+            obs, _ = env.reset() #TODO: consider setting seed here
             terminations = truncations = False
             while not (terminations or truncations):
                 actions = env.action_space.sample()
                 actions[mask_array] = 0.
                 next_obs, rewards, terminations, truncations, infos = env.step(actions) #TODO: check warning
-                
                 # Add data to replay buffer
                 real_next_obs = next_obs.copy() if not (terminations or truncations) else obs
                 rb.add(obs, real_next_obs, actions, rewards, terminations, infos)
+                # DO NOT MODIFY: Crucial step (easy to overlook)
+                obs = next_obs
+                # Break out of RL env loop if buffer cap or max interaction steps reached
                 saved_obs += 1
-                episode_reward += rewards
-                episode_length += 1
-                # if "episode" in infos:
-                #     print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
-                #     writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
-                #     writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
-
-                # Reset environment on termination or truncation
-                if terminations or truncations:
-                    obs, _ = env.reset() #TODO: consider setting seed here
-                    # print(
-                    #     f"# interactions: {n_action_dims - sum(mask_array)}; " +
-                    #     f"trajectory idx: {traj_idx}; " +
-                    #     f"episode reward, length: ({episode_reward}, {episode_length})"
-                    # )
-                    episode_reward = 0
-                    episode_length = 0
-                else:
-                    # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
-                    obs = next_obs
+                interact_steps += 1
+                if saved_obs >= args.prepopulate_buffer_hard_cap:
+                    buffer_cap_reached = True
+                    break
+                if interact_steps >= args.max_steps_per_interact:
+                    interact_steps_max_reached = True
+                    break
     return rb
 
 
