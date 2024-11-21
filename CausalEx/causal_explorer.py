@@ -51,7 +51,6 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
     # Create combinations of column indices to unmask
     ## Testing reversing order to prioritize higher-dimensional interactions
     n_action_dims = env.action_space.shape[0]
-
     interaction_col_idxs = []
     interaction_level = 1
     while interaction_level <= n_action_dims:
@@ -120,54 +119,25 @@ def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
     torch.manual_seed(args.seed + ADJUST_SEED)
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
-    # Calculate number of random trajectories to generate
-    # For fair comparison, set equal to the number of trajectories generated for Causal Explorer:
-    #   total_unique_interactions = sum({n choose r}) 
-    #       for n=action_space_dim, r={1,...,min(action_space_dim, max_nway_interact)}; 
-    #   total number of trajectories = total_unique_interactions * max_traj_per_interact
-    n_action_dims = env.action_space.shape[0]
-    n_interactions = min(args.max_nway_interact, n_action_dims)
-    n_unique_interact = sum([comb(n_interactions, r) for r in range(1, n_interactions + 1)])
-    n_total_traj = n_unique_interact * args.max_traj_per_interact
-
     # Generate random data
     obs, _ = env.reset(seed=(args.seed + ADJUST_SEED))
-    episode_reward = 0
-    episode_length = 0
     saved_obs = 0
-    for traj_idx in range(n_total_traj):
-        print(f"Randomly generating trajectory {traj_idx+1} / {n_total_traj}")
-        # Implement hard cap on number of saved observations
-        if saved_obs > args.prepopulate_buffer_hard_cap:
-            print(f"Reached hard cap of {args.prepopulate_buffer_hard_cap} observations")
-            break
-        # Iterate through entire trajectory
+    buffer_cap_reached = False
+    while not buffer_cap_reached:
+        # Iterate through RL environment
+        obs, _ = env.reset() #TODO: consider setting seed here
         terminations = truncations = False
         while not (terminations or truncations):
             actions = env.action_space.sample()
             next_obs, rewards, terminations, truncations, infos = env.step(actions) #TODO: check warning
-            
             # Add data to replay buffer
             real_next_obs = next_obs.copy() if not (terminations or truncations) else obs
             rb.add(obs, real_next_obs, actions, rewards, terminations, infos)
+            # DO NOT MODIFY: Crucial step (easy to overlook)
+            obs = next_obs
+            # Break out of RL env loop if buffer cap reached
             saved_obs += 1
-            episode_reward += rewards
-            episode_length += 1
-            # if "episode" in infos:
-            #     print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
-            #     writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
-            #     writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
-
-            # Reset environment on termination or truncation
-            if terminations or truncations:
-                obs, _ = env.reset() #TODO: consider setting seed here
-                # print(
-                #     f"trajectory idx: {traj_idx}; " +
-                #     f"episode reward, length: ({episode_reward}, {episode_length})"
-                # )
-                episode_reward = 0
-                episode_length = 0
-            else:
-                # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
-                obs = next_obs
+            if saved_obs >= args.prepopulate_buffer_hard_cap:
+                buffer_cap_reached = True
+                break
     return rb
