@@ -6,6 +6,11 @@ from typing import Optional, Tuple
 
 @dataclass
 class RunArgs:
+
+    # Developer settings
+    debug_mode: bool = False
+
+    # General settings
     run_name: str = "SAC_241121v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
@@ -22,6 +27,7 @@ class RunArgs:
     """list of MuJoCo environments to use in experiments"""
     cx_modes: Tuple[str] = ("causal", "random")
     """replay buffer prepopulation methods to test; options: {'causal', 'random'}"""
+
 
     def setup_dirs(self) -> None:
         os.makedirs(self.run_dir, exist_ok=self.overwrite_run_dir)
@@ -61,8 +67,8 @@ class ExperimentArgs(RunArgs):
     """the discount factor gamma"""
     tau: float = 0.005
     """target smoothing coefficient (default: 0.005)"""
-    batch_size: int = 512
-    """the batch size of sample from the reply memory"""
+    batch_size: int = 256
+    """the batch size of sample from the replay memory"""
     learning_starts: int = 0 # original value = 5e3
     """timestep to start learning"""
     policy_lr: float = 3e-4
