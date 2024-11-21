@@ -6,8 +6,10 @@ from typing import Optional, Tuple
 
 @dataclass
 class RunArgs:
-    run_name = "SAC_241120v1"
+    run_name: str = "SAC_241120v1"
     """unique name to identify run"""
+    overwrite_run_dir: bool = False
+    """if True, will overwrite existing run_dir with the same name"""
     run_dir: str = os.path.join("runs", run_name)
     """directory to store all experiment results"""
     env_ids: Tuple[str] = (
@@ -22,7 +24,7 @@ class RunArgs:
     """replay buffer prepopulation methods to test; options: {'causal', 'random'}"""
 
     def __post_init__(self) -> None:
-        os.makedirs(self.run_dir, exist_ok=True)
+        os.makedirs(self.run_dir, exist_ok=self.overwrite_run_dir)
 
     def save_config(self, path) -> None:
         """Save configuration parameters for reference."""
@@ -79,8 +81,6 @@ class ExperimentArgs(RunArgs):
     # Causal Explorer-specific arguments
     prepopulate_buffer_hard_cap: int = 100_000 # 100_000
     """hard maximum for total number of observations to prepopulate in replay buffer"""
-    # max_nway_interact: int = 6
-    # """maximum n-way interactions to test"""
     max_steps_per_interact: int = 1000
     """number of environment steps to run per n-way interaction"""
 
