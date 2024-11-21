@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 @dataclass
 class RunArgs:
-    run_name: str = "SAC_241120v1"
+    run_name: str = "SAC_241121v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -23,7 +23,7 @@ class RunArgs:
     cx_modes: Tuple[str] = ("causal", "random")
     """replay buffer prepopulation methods to test; options: {'causal', 'random'}"""
 
-    def __post_init__(self) -> None:
+    def setup_dirs(self) -> None:
         os.makedirs(self.run_dir, exist_ok=self.overwrite_run_dir)
 
     def save_config(self, path) -> None:

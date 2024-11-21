@@ -302,7 +302,7 @@ if __name__ == "__main__":
 
     # Set up multiprocessing
     num_cores = os.cpu_count()
-    num_workers = num_cores // 2
+    num_workers = int(num_cores * 3) // 4
     process_args = []
 
     # Specify number of seeds to test
@@ -313,6 +313,7 @@ if __name__ == "__main__":
 
     # Instantiate run arguments (applies to all experiments)
     run_args = RunArgs()
+    run_args.setup_dirs()
     run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
 
     # Load random seeds

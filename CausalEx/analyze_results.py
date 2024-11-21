@@ -16,7 +16,6 @@ if __name__ == "__main__":
 
     # Instantiate run arguments (applies to all experiments)
     run_args = RunArgs()
-    run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
 
     # Loop over environments
     for env_id in run_args.env_ids:
