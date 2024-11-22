@@ -1,4 +1,5 @@
 import glob
+from itertools import chain
 import json
 import os
 
@@ -23,8 +24,11 @@ if __name__ == "__main__":
         ###################################
         ## Average Episode Reward/Length ##
         ###################################
-        # Loop over buffer prepopulation modes
+        linewidth = 2
+        alpha = 0.2
         fig, axes = plt.subplots(1, 2, figsize=(16,6))
+
+        # Loop over buffer prepopulation modes
         for cx_mode in run_args.cx_modes:
 
             # Get all experiment folders
@@ -58,7 +62,7 @@ if __name__ == "__main__":
                 ax=axes[0],
                 label=f"{cx_mode}",
                 color=colors[cx_mode],
-                linewidth=2,
+                linewidth=linewidth,
             )
             sns.lineplot(
                 x=range(min_num_episodes),
@@ -66,21 +70,21 @@ if __name__ == "__main__":
                 ax=axes[1],
                 label=f"{cx_mode}",
                 color=colors[cx_mode],
-                linewidth=2,
+                linewidth=linewidth,
             )
             # axes[0].fill_between(
             #     x=range(min_num_episodes),
             #     y1=avg_episode_reward - sd_episode_reward,
             #     y2=avg_episode_reward + sd_episode_reward, 
             #     color=colors[cx_mode],
-            #     alpha=0.2
+            #     alpha=alpha,
             # )
             # axes[1].fill_between(
             #     x=range(min_num_episodes),
             #     y1=avg_episode_length - sd_episode_length,
             #     y2=avg_episode_length + sd_episode_length, 
             #     color=colors[cx_mode],
-            #     alpha=0.2
+            #     alpha=alpha,
             # )
         for i in range(2):
             axes[i].legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
@@ -96,8 +100,12 @@ if __name__ == "__main__":
         ###################################
         ## Actor and Critic Model Losses ##
         ###################################
+        linewidth = 1
+        alpha = 0.2
+        fig, axes = plt.subplots(4, 1, figsize=(8,8))
+        fig.subplots_adjust(hspace=1)
+
         # Loop over buffer prepopulation modes
-        fig, axes = plt.subplots(1, 4, figsize=(16,6))
         for cx_mode in run_args.cx_modes:
 
             # Get all experiment folders
@@ -111,44 +119,101 @@ if __name__ == "__main__":
                     loss_data_all.append(json.load(io))
             
             # Unnest loss data and create matrices of shape (n_steps, m_experiments)
-            ## TODO: truncate for same size?
-            critic1_losses = np.array([v for exp in loss_data_all for v in exp["critic1"].values()]).T
-            critic2_losses = np.array([v for exp in loss_data_all for v in exp["critic2"].values()]).T
+            # Note that actor and alpha are updated x times every x timesteps (so formatting is different)
+            critic1_losses = np.array([list(exp['critic1'].values()) for exp in loss_data_all]).T
+            critic2_losses = np.array([list(exp['critic2'].values()) for exp in loss_data_all]).T
+            actor_losses = np.array([
+                list(chain.from_iterable(exp['actor'].values()))
+                for exp in loss_data_all
+            ]).T
+            alpha_losses = np.array([
+                list(chain.from_iterable(exp['alpha'].values()))
+                for exp in loss_data_all
+            ]).T
 
-            # Structure of loss data dict
-        #     {
-        #         critic1: {
-        #             step1: loss,
-        #             ...
-        #         },
-        #         critic2: {
-        #             step1: loss,
-        #             ...
-        #         },
-        #         actor: {
-        #             step64: [loss1, loss2, ...],
-        #             step128: [loss1, loss2, ...],
-        #             ...
-        #         },
-        #         alpha: {
-        #             step64: [loss1, loss2, ...],
-        #             step128: [loss1, loss2, ...],
-        #             ...
-        #         },
-        #     }
-        # ]
+            # Calculate mean and standard dev of losses across all seeds
+            avg_step_critic1_loss = np.mean(critic1_losses, axis=1)
+            avg_step_critic2_loss = np.mean(critic2_losses, axis=1)
+            avg_step_actor_loss = np.mean(actor_losses, axis=1)
+            avg_step_alpha_loss = np.mean(alpha_losses, axis=1)
 
+            sd_step_critic1_loss = np.std(critic1_losses, axis=1)
+            sd_step_critic2_loss = np.std(critic2_losses, axis=1)
+            sd_step_actor_loss = np.std(actor_losses, axis=1)
+            sd_step_alpha_loss = np.std(alpha_losses, axis=1)
 
-
-            # # Clip metrics lists so that all seeds have same number of episodes
-            # min_num_episodes = min([len(exp) for exp in exp_rewards_all])
-            # rewards = np.array([exp[:min_num_episodes] for exp in exp_rewards_all]).T
-            # lengths = np.array([exp[:min_num_episodes] for exp in exp_lengths_all]).T
-
-            # # Calculate mean and standard dev of metrics across all seeds
-            # avg_episode_reward = np.mean(rewards, axis=1)
-            # avg_episode_length = np.mean(lengths, axis=1)
-            # sd_episode_reward = np.std(rewards, axis=1)
-            # sd_episode_length = np.std(lengths, axis=1)
-
-            
+            # Plot mean and standard deviation
+            sns.lineplot(
+                x=range(len(avg_step_critic1_loss)),
+                y=avg_step_critic1_loss,
+                ax=axes[0],
+                label=f"{cx_mode}",
+                color=colors[cx_mode],
+                linewidth=linewidth,
+            )
+            sns.lineplot(
+                x=range(len(avg_step_critic2_loss)),
+                y=avg_step_critic2_loss,
+                ax=axes[1],
+                label=f"{cx_mode}",
+                color=colors[cx_mode],
+                linewidth=linewidth,
+            )
+            sns.lineplot(
+                x=range(len(avg_step_actor_loss)),
+                y=avg_step_actor_loss,
+                ax=axes[2],
+                label=f"{cx_mode}",
+                color=colors[cx_mode],
+                linewidth=linewidth,
+            )
+            sns.lineplot(
+                x=range(len(avg_step_alpha_loss)),
+                y=avg_step_alpha_loss,
+                ax=axes[3],
+                label=f"{cx_mode}",
+                color=colors[cx_mode],
+                linewidth=linewidth,
+            )
+            axes[0].fill_between(
+                x=range(len(avg_step_critic1_loss)),
+                y1=avg_step_critic1_loss - sd_step_critic1_loss,
+                y2=avg_step_critic1_loss + sd_step_critic1_loss, 
+                color=colors[cx_mode],
+                alpha=alpha,
+            )
+            axes[1].fill_between(
+                x=range(len(avg_step_critic2_loss)),
+                y1=avg_step_critic2_loss - sd_step_critic2_loss,
+                y2=avg_step_critic2_loss + sd_step_critic2_loss, 
+                color=colors[cx_mode],
+                alpha=alpha,
+            )
+            axes[2].fill_between(
+                x=range(len(avg_step_actor_loss)),
+                y1=avg_step_actor_loss - sd_step_actor_loss,
+                y2=avg_step_actor_loss + sd_step_actor_loss, 
+                color=colors[cx_mode],
+                alpha=alpha,
+            )
+            axes[3].fill_between(
+                x=range(len(avg_step_alpha_loss)),
+                y1=avg_step_alpha_loss - sd_step_alpha_loss,
+                y2=avg_step_alpha_loss + sd_step_alpha_loss, 
+                color=colors[cx_mode],
+                alpha=alpha,
+            )
+        for i in range(4):
+            # axes[i].legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+            axes[i].set_xlabel("Timestep")
+            axes[i].set_ylabel("Average Loss \n(Stddev)")
+        axes[0].set_title("Critic 1 loss", loc="left")
+        axes[1].set_title("Critic 2 loss", loc="left")
+        axes[2].set_title("Actor loss", loc="left")
+        axes[3].set_title("Alpha loss", loc="left")
+        fig.align_ylabels()
+        fig.suptitle(f"Environment: {env_id}")
+        fig.savefig(
+            os.path.join(run_args.run_dir, f"env_{env_id}_losses.png"),
+            bbox_inches="tight",
+        )
