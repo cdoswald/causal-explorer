@@ -67,7 +67,7 @@ class ExperimentArgs(RunArgs):
     """the discount factor gamma"""
     tau: float = 0.005
     """target smoothing coefficient (default: 0.005)"""
-    batch_size: int = 256
+    batch_size: int = 512
     """the batch size of sample from the replay memory"""
     learning_starts: int = 0 # original value = 5e3
     """timestep to start learning"""
