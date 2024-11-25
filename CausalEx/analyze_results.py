@@ -39,10 +39,14 @@ if __name__ == "__main__":
             exp_rewards_all = []
             exp_lengths_all = []
             for exp_dir in exp_dirs:
-                with open(os.path.join(exp_dir, f"episode_rewards.json"), "r") as io:
-                    exp_rewards_all.append(json.load(io))
-                with open(os.path.join(exp_dir, "episode_lengths.json"), "r") as io:
-                    exp_lengths_all.append(json.load(io))
+                exp_rewards_path = os.path.join(exp_dir, "episode_rewards.json")
+                if os.path.exists(exp_rewards_path):
+                    with open(exp_rewards_path, "r") as io:
+                        exp_rewards_all.append(json.load(io))
+                exp_lengths_path = os.path.join(exp_dir, "episode_lengths.json")
+                if os.path.exists(exp_lengths_path):
+                    with open(exp_lengths_path, "r") as io:
+                        exp_lengths_all.append(json.load(io))
 
             # Clip metrics lists so that all seeds have same number of episodes
             min_num_episodes = min([len(exp) for exp in exp_rewards_all])
@@ -115,8 +119,10 @@ if __name__ == "__main__":
             # Load loss data
             loss_data_all = []
             for exp_dir in exp_dirs:
-                with open(os.path.join(exp_dir, f"loss_data.json"), "r") as io:
-                    loss_data_all.append(json.load(io))
+                loss_data_path = os.path.join(exp_dir, "loss_data.json")
+                if os.path.exists(loss_data_path):
+                    with open(loss_data_path, "r") as io:
+                        loss_data_all.append(json.load(io))
             
             # Unnest loss data and create matrices of shape (n_steps, m_experiments)
             # Note that actor and alpha are updated x times every x timesteps (so formatting is different)
