@@ -75,7 +75,6 @@ def run_experiment(args):
         raise ValueError(
             f"CX mode'{args.cx_mode} not recognized. Double-check configuration arguments."
         )
-    #TODO: print non-empty buffer size here
 
     # TRY NOT TO MODIFY: start the game
     loss_dict = {"critic1":{}, "critic2":{}, "actor":{}, "alpha":{}}
@@ -206,7 +205,7 @@ if __name__ == "__main__":
 
     # Set up multiprocessing
     num_cores = os.cpu_count()
-    num_workers = int(num_cores * 3) // 4
+    num_workers = num_cores // 2 #int(num_cores * 3) // 4
     process_args = []
 
     # Specify number of seeds to test
