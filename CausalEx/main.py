@@ -1,4 +1,3 @@
-from dataclasses import replace
 import json
 import multiprocessing as mp
 import os
@@ -8,17 +7,14 @@ import time
 import numpy as np
 
 import gymnasium as gym
-from gymnasium.experimental.wrappers.rendering import RecordVideoV0 as RecordVideo
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
 from stable_baselines3.common.buffers import ReplayBuffer
-from torch.utils.tensorboard import SummaryWriter
 
 from causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
 from config import RunArgs, ExperimentArgs
 from models import Actor, SoftQNetwork
-from utils import save_video
 
 
 # Largely based on CleanRL SAC implementation
@@ -128,7 +124,7 @@ def run_experiment(args):
             data = rb.sample(args.batch_size)
             with torch.no_grad():
                 next_state_actions, next_state_log_pi, _ = actor.get_action(data.next_observations)
-                qf1_next_target = qf1_target(data.next_observations, next_state_actions)
+                qf1_next_target = qf1_target(data.next_observations, next_state_actions) 
                 qf2_next_target = qf2_target(data.next_observations, next_state_actions)
                 min_qf_next_target = torch.min(qf1_next_target, qf2_next_target) - alpha * next_state_log_pi
                 next_q_value = data.rewards.flatten() + (1 - data.dones.flatten()) * args.gamma * (min_qf_next_target).view(-1)
@@ -206,98 +202,6 @@ def run_experiment(args):
     env.close()
 
 
-# def eval_SAC(args, actor_path):
-#     """Evaluate trained SAC agent"""
-#     writer = SummaryWriter(f"runs/{args.run_name}")
-#     writer.add_text(
-#         "hyperparameters",
-#         "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
-#     )
-
-#     # TRY NOT TO MODIFY: seeding
-#     random.seed(args.seed)
-#     np.random.seed(args.seed)
-#     torch.manual_seed(args.seed)
-#     torch.backends.cudnn.deterministic = args.torch_deterministic
-
-#     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-
-#     # env setup
-#     env = gym.make(args.env_id, render_mode="rgb_array")
-#     videos_dir = f"videos/{args.run_name}"
-#     os.makedirs(videos_dir, exist_ok=True)
-#     # env = RecordVideo(
-#     #     env,
-#     #     f"videos/{args.run_name}",
-#     #     episode_trigger=lambda episode_id: episode_id % 20 == 0,
-#     # )
-#     env = gym.wrappers.RecordEpisodeStatistics(env)
-#     env.action_space.seed(args.seed)
-
-#     assert isinstance(env.action_space, gym.spaces.Box), "only continuous action space is supported"
-#     max_action = float(env.action_space.high[0])
-
-#     # Load model
-#     actor = Actor(env).to(device)
-#     actor.load_state_dict(torch.load(actor_path, weights_only=True))
-
-#     # TRY NOT TO MODIFY: start the game
-#     episode_rewards = []
-#     episode_lengths = []
-#     episode_frames = []
-#     episode_reward = 0
-#     episode_length = 0
-#     episode_idx = 0
-#     obs, _ = env.reset(seed=args.seed)
-#     for global_step in range(args.eval_timesteps):
-#         # ALGO LOGIC: put action logic here
-#         _, _, mean_action = actor.get_action(torch.Tensor(obs).to(device))
-#         actions = mean_action.detach().cpu().numpy()
-
-#         # TRY NOT TO MODIFY: execute the game and log data.
-#         next_obs, rewards, terminations, truncations, infos = env.step(actions)
-
-#         # Render and record frame (VideoRecorder not working correctly)
-#         episode_frames.append(env.render().astype(np.uint8))
-
-#         # TRY NOT TO MODIFY: record rewards for plotting purposes
-#         episode_reward += rewards
-#         episode_length += 1
-#         if "episode" in infos:
-#             episode_rewards.append(episode_reward)
-#             episode_lengths.append(episode_length)
-#             print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
-#             writer.add_scalar("charts/episodic_return", infos["episode"]["r"], global_step)
-#             writer.add_scalar("charts/episodic_length", infos["episode"]["l"], global_step)
-
-#         # Reset environment on termination or truncation
-#         if terminations or truncations:
-#             obs, _ = env.reset()
-#             # print(f'Global step: {global_step}; episode reward: {episode_reward}; length = {episode_length}')
-#             episode_reward = 0
-#             episode_length = 0
-#             # Save episode video
-#             if episode_idx < 10:
-#                 save_path = os.path.join(videos_dir, f"episode_{episode_idx}.mp4")
-#                 save_video(episode_frames, save_path)
-#             # Increment episode index and reset frames list
-#             episode_idx += 1
-#             episode_frames = []
-#         else:
-#             # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
-#             obs = next_obs
-
-#     # Save metrics
-#     with open(f"runs/{args.run_name}/episode_rewards.json", "w") as io:
-#         json.dump(episode_rewards, io)
-#     with open(f"runs/{args.run_name}/episode_lengths.json", "w") as io:
-#         json.dump(episode_lengths, io)
-
-#     # Clean up
-#     env.close()
-#     writer.close()
-
-
 if __name__ == "__main__":
 
     # Set up multiprocessing
@@ -350,7 +254,7 @@ if __name__ == "__main__":
     # Start processes
     with mp.Pool(processes=num_workers) as pool:
         pool.map(run_experiment, process_args)
-    
+
     # Record end time and report progress
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
     print(f"Run start time: {start_time} \nRun end time: {end_time}")
