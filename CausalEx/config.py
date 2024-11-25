@@ -11,7 +11,7 @@ class RunArgs:
     debug_mode: bool = False
 
     # General settings
-    run_name: str = "SAC_241121v1"
+    run_name: str = "SAC_241122v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -19,7 +19,7 @@ class RunArgs:
     """directory to store all experiment results"""
     env_ids: Tuple[str] = (
         "Ant-v4",
-        "HalfCheetah-v4",
+        # "HalfCheetah-v4",
         # "Hopper-v4", #TODO: fix XML file
         "Humanoid-v4",
         # "Walker2d-v4", #TODO: fix XML file
@@ -33,7 +33,7 @@ class RunArgs:
         os.makedirs(self.run_dir, exist_ok=self.overwrite_run_dir)
 
     def save_config(self, path) -> None:
-        """Save configuration parameters for reference."""
+        """Save configuration panext_state_actionsrameters for reference."""
         with open(path, "w") as file:
             json.dump(self.__dict__, file, indent=4)
     
@@ -57,9 +57,9 @@ class ExperimentArgs(RunArgs):
     """seed of the experiment"""
 
     # RL algorithm-specific arguments
-    train_timesteps: int = 100_000 #100_000
+    train_timesteps: int = 1_000_000 #100_000
     """total training timesteps of the experiments"""
-    eval_timesteps: int = 50_000
+    eval_timesteps: int = 10_000
     """total evaluation timesteps of the experiments"""
     buffer_size: int = int(1e6)
     """the replay memory buffer size"""
@@ -85,7 +85,7 @@ class ExperimentArgs(RunArgs):
     """automatic tuning of the entropy coefficient"""
 
     # Causal Explorer-specific arguments
-    prepopulate_buffer_hard_cap: int = 100_000 # 100_000
+    prepopulate_buffer_hard_cap: int = 200_000 # 100_000
     """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_steps_per_interact: int = 1000
     """number of environment steps to run per n-way interaction"""
