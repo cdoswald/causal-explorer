@@ -11,14 +11,14 @@ class RunArgs:
     debug_mode: bool = False
 
     # General settings
-    run_name: str = "SAC_241122v1"
+    run_name: str = "SAC_241125v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
     run_dir: str = os.path.join("runs", run_name)
     """directory to store all experiment results"""
     env_ids: Tuple[str] = (
-        "Ant-v4",
+        # "Ant-v4",
         # "HalfCheetah-v4",
         # "Hopper-v4", #TODO: fix XML file
         "Humanoid-v4",
