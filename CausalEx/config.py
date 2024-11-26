@@ -11,7 +11,7 @@ class RunArgs:
     debug_mode: bool = False
 
     # General settings
-    run_name: str = "SAC_241125v1"
+    run_name: str = "SAC_241126v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
