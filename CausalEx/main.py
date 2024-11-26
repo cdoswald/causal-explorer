@@ -205,11 +205,11 @@ if __name__ == "__main__":
 
     # Set up multiprocessing
     num_cores = os.cpu_count()
-    num_workers = num_cores // 2 #int(num_cores * 3) // 4
+    num_workers = 10 #int(num_cores * 3) // 4
     process_args = []
 
     # Specify number of seeds to test
-    use_n_seeds = 20 # max is currently 100
+    use_n_seeds = 10 # max is currently 100
 
     # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
