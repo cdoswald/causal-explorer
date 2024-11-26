@@ -2,7 +2,7 @@
 
 pip install .
 
-python3 CausalEx/main.py
+python3 CausalEx/A1_main.py
 
-python3 CausalEx/analyze_results.py
+python3 CausalEx/A2_analyze_results.py
 
