@@ -86,7 +86,7 @@ if __name__ == "__main__":
     process_args = []
 
     # Set experiment parameters
-    seed = 9745 # Use same seed for all experiments
+    seed = 42 #TODO: average over seeds?
     env_ids = [
         "Ant-v4",
         "HalfCheetah-v4",
