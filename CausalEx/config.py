@@ -11,7 +11,7 @@ class RunArgs:
     debug_mode: bool = False
 
     # General settings
-    run_name: str = "SAC_241126v1"
+    run_name: str = "SAC_241127v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -67,7 +67,7 @@ class ExperimentArgs(RunArgs):
     """the discount factor gamma"""
     tau: float = 0.005
     """target smoothing coefficient (default: 0.005)"""
-    batch_size: int = 512
+    batch_size: int = 256
     """the batch size of sample from the replay memory"""
     learning_starts: int = 0 # original value = 5e3
     """timestep to start learning"""

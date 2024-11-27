@@ -80,7 +80,7 @@ def run_experiment(args):
     loss_dict = {"critic1":{}, "critic2":{}, "actor":{}, "alpha":{}}
     episode_rewards = []
     episode_lengths = []
-    episode_reward = 0
+    episode_reward = np.float32(0)
     episode_length = 0
     obs, _ = env.reset(seed=args.seed)
     for global_step in range(args.train_timesteps):
@@ -102,7 +102,7 @@ def run_experiment(args):
         #         writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
         #         writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
         #         break
-        episode_reward += rewards
+        episode_reward += np.float32(round(rewards, 5))
         episode_length += 1
         if "episode" in infos:
             episode_rewards.append(episode_reward)
@@ -112,7 +112,7 @@ def run_experiment(args):
         # Reset environment on termination or truncation
         if terminations or truncations:
             obs, _ = env.reset(seed=args.seed)
-            episode_reward = 0
+            episode_reward = np.float32(0)
             episode_length = 0
         else:
             # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
@@ -135,8 +135,8 @@ def run_experiment(args):
             qf_loss = qf1_loss + qf2_loss
 
             # record losses
-            loss_dict["critic1"][global_step] = qf1_loss.item()
-            loss_dict["critic2"][global_step] = qf2_loss.item()
+            loss_dict["critic1"][global_step] = np.float32(round(qf1_loss.item(), 5))
+            loss_dict["critic2"][global_step] = np.float32(round(qf2_loss.item(), 5))
 
             # optimize the model
             q_optimizer.zero_grad()
@@ -154,7 +154,7 @@ def run_experiment(args):
                     qf2_pi = qf2(data.observations, pi)
                     min_qf_pi = torch.min(qf1_pi, qf2_pi)
                     actor_loss = ((alpha * log_pi) - min_qf_pi).mean()
-                    temp_actor_losses.append(actor_loss.item())
+                    temp_actor_losses.append(np.float32(round(actor_loss.item(), 5)))
 
                     actor_optimizer.zero_grad()
                     actor_loss.backward()
@@ -164,7 +164,7 @@ def run_experiment(args):
                         with torch.no_grad():
                             _, log_pi, _ = actor.get_action(data.observations)
                         alpha_loss = (-log_alpha.exp() * (log_pi + target_entropy)).mean()
-                        temp_alpha_losses.append(alpha_loss.item())
+                        temp_alpha_losses.append(np.float32(round(alpha_loss.item(), 5)))
 
                         a_optimizer.zero_grad()
                         alpha_loss.backward()
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     process_args = []
 
     # Specify number of seeds to test
-    use_n_seeds = 10 # max is currently 100
+    use_n_seeds = 5 # max is currently 100
 
     # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
