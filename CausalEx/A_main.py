@@ -4,12 +4,11 @@ import os
 import time
 
 from config import RunArgs, ExperimentArgs
-from A_multiple_experiments import run_all_experiments
+from A_run_all_experiments import run_all_experiments
 
 
 def main():
 
-    # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
     # Instantiate run arguments (applies to all experiments)
@@ -24,7 +23,6 @@ def main():
     # Run experiments
     run_all_experiments(run_args, seeds)
 
-    # Record end time
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
     print(f"Run start time: {start_time} \nRun end time: {end_time}")
 

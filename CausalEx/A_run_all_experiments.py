@@ -2,7 +2,7 @@ import multiprocessing as mp
 import os
 
 from config import RunArgs, ExperimentArgs
-from A_run_single_experiment import run_single_experiment
+from A_single_experiment import run_single_experiment
 
 
 def run_all_experiments(run_args, seeds):
