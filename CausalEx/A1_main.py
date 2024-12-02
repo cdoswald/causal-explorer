@@ -203,14 +203,6 @@ def run_experiment(args):
 
 if __name__ == "__main__":
 
-    # Set up multiprocessing
-    num_cores = os.cpu_count()
-    num_workers = 10 #int(num_cores * 3) // 4
-    process_args = []
-
-    # Specify number of seeds to test
-    use_n_seeds = 5 # max is currently 100
-
     # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -221,9 +213,10 @@ if __name__ == "__main__":
 
     # Load random seeds
     with open("seeds_list.json", "r") as io:
-        seeds = json.load(io)[:use_n_seeds]
+        seeds = json.load(io)[:run_args.use_n_seeds]
 
     # Loop over environments
+    process_args = []
     for env_id in run_args.env_ids:
 
         # Loop over buffer prepopulation modes
@@ -251,7 +244,7 @@ if __name__ == "__main__":
                     process_args.append(exp_args)
 
     # Start processes
-    with mp.Pool(processes=num_workers) as pool:
+    with mp.Pool(processes=run_args.num_workers) as pool:
         pool.map(run_experiment, process_args)
 
     # Record end time and report progress
