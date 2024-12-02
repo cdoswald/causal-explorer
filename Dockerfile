@@ -48,4 +48,5 @@ RUN pip install \
 	imageio-ffmpeg \
 	typing_extensions \
 	gymnasium==0.29.1 \
+	stable-baselines3==2.4.0 \
 	# torch --extra-index-url https://download.pytorch.org/whl/cu118
