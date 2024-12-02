@@ -5,7 +5,11 @@ import time
 
 from config import RunArgs, ExperimentArgs
 from A_run_all_experiments import run_all_experiments
-
+from A_analyze_results import (
+    visualize_episode_rewards,
+    visualize_episode_lengths,
+    visualize_model_losses,
+)
 
 def main():
 
@@ -22,6 +26,11 @@ def main():
 
     # Run experiments
     run_all_experiments(run_args, seeds)
+
+    # Create visualizations
+    visualize_episode_rewards(run_args)
+    visualize_episode_lengths(run_args)
+    visualize_model_losses(run_args)
 
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
     print(f"Run start time: {start_time} \nRun end time: {end_time}")
