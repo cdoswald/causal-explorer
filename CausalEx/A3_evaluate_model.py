@@ -7,7 +7,6 @@ import time
 import numpy as np
 
 import gymnasium as gym
-from gymnasium.experimental.wrappers.rendering import RecordVideoV0 as RecordVideo
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
