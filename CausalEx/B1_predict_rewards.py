@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     # Set experiment parameters
     seed = 42 #TODO: average over seeds?
-    test_buffer_sizes = [10_000, 100_000, 500_000, 1_000_000]
+    test_buffer_sizes = [5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000]
 
     # Set training parameters
     n_epochs = 20

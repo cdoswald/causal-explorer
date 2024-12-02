@@ -1,5 +1,4 @@
 import json
-import multiprocessing as mp
 import os
 import random
 import time
@@ -13,12 +12,11 @@ import torch.optim as optim
 from stable_baselines3.common.buffers import ReplayBuffer
 
 from causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
-from config import RunArgs, ExperimentArgs
 from models import Actor, SoftQNetwork
 
 
-# Largely based on CleanRL SAC implementation
-def run_experiment(args):
+# Based on CleanRL SAC implementation
+def run_single_experiment(args):
 
     current_time = time.strftime('%Y-%m-%d %H:%M:%S')
     print(f'Starting experiment {args.exp_dir} on PID {os.getpid()} at {current_time}.')
@@ -64,7 +62,6 @@ def run_experiment(args):
         device,
         handle_timeout_termination=False,
     )
-    start_time = time.time()
 
     # Prepopulate replay buffer
     if args.cx_mode.lower() == "causal":
@@ -199,54 +196,3 @@ def run_experiment(args):
 
     # Clean up
     env.close()
-
-
-if __name__ == "__main__":
-
-    # Record start time
-    start_time = time.strftime('%Y-%m-%d %H:%M:%S')
-
-    # Instantiate run arguments (applies to all experiments)
-    run_args = RunArgs()
-    run_args.setup_dirs()
-    run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
-
-    # Load random seeds
-    with open("seeds_list.json", "r") as io:
-        seeds = json.load(io)[:run_args.use_n_seeds]
-
-    # Loop over environments
-    process_args = []
-    for env_id in run_args.env_ids:
-
-        # Loop over buffer prepopulation modes
-        for cx_mode in run_args.cx_modes:
-
-            # Loop over seeds
-            for seed in seeds:
-
-                # Create experiment arguments
-                exp_args = ExperimentArgs(
-                    env_id=env_id,
-                    cx_mode=cx_mode,
-                    seed=seed,
-                )
-                exp_args.create_exp_dir()
-                exp_args.save_config(
-                    os.path.join(exp_args.exp_dir, "exp_config.json")
-                )
-
-                if run_args.debug_mode:
-                    # Run sequentially
-                    run_experiment(exp_args)
-                else:
-                    # Add experiment-specific arguments to processes list
-                    process_args.append(exp_args)
-
-    # Start processes
-    with mp.Pool(processes=run_args.num_workers) as pool:
-        pool.map(run_experiment, process_args)
-
-    # Record end time and report progress
-    end_time = time.strftime('%Y-%m-%d %H:%M:%S')
-    print(f"Run start time: {start_time} \nRun end time: {end_time}")
