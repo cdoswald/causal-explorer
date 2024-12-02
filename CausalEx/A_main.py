@@ -5,7 +5,7 @@ import time
 
 from config import RunArgs, ExperimentArgs
 from A_run_all_experiments import run_all_experiments
-from A_analyze_results import (
+from A_visualize_results import (
     visualize_episode_rewards,
     visualize_episode_lengths,
     visualize_model_losses,
