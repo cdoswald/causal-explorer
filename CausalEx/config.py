@@ -64,7 +64,7 @@ class ExperimentArgs(RunArgs):
     """seed of the experiment"""
 
     # RL algorithm-specific arguments
-    train_timesteps: int = 1_000_000 #100_000
+    train_timesteps: int = 500_000 #100_000
     """total training timesteps of the experiments"""
     eval_timesteps: int = 10_000
     """total evaluation timesteps of the experiments"""
@@ -92,7 +92,7 @@ class ExperimentArgs(RunArgs):
     """automatic tuning of the entropy coefficient"""
 
     # Causal Explorer-specific arguments
-    prepopulate_buffer_hard_cap: int = 200_000 # 100_000
+    prepopulate_buffer_hard_cap: int = 100_000 # 100_000
     """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_steps_per_interact: int = 1000
     """number of environment steps to run per n-way interaction"""
