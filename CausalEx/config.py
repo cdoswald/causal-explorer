@@ -10,19 +10,26 @@ class RunArgs:
     # Developer settings
     debug_mode: bool = False
 
-    # General settings
-    run_name: str = "SAC_241127v1"
+    # Multiprocessing settings
+    num_workers: int = 24 # num_cores = os.cpu_count()
+
+    # Directory settings
+    run_name: str = "SAC_241202v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
     run_dir: str = os.path.join("runs", run_name)
     """directory to store all experiment results"""
+
+    # General settings
+    use_n_seeds: int = 10 # Current max is 100
+    """number of random seeds to test (results averaged over all seeds)"""
     env_ids: Tuple[str] = (
-        # "Ant-v4",
-        # "HalfCheetah-v4",
-        # "Hopper-v4", #TODO: fix XML file
-        "Humanoid-v4",
-        # "Walker2d-v4", #TODO: fix XML file
+        "Ant-v5",
+        "HalfCheetah-v5",
+        "Hopper-v5",
+        # "Humanoid-v5", # TODO: fix memory issues
+        "Walker2d-v5",
     )
     """list of MuJoCo environments to use in experiments"""
     cx_modes: Tuple[str] = ("causal", "random")
