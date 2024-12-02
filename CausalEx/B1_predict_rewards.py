@@ -80,21 +80,11 @@ def train_q_model(args):
 
 if __name__ == "__main__":
 
-    # Set up multiprocessing
-    num_cores = os.cpu_count()
-    num_workers = 24 #int(num_cores * 3) // 4
-    process_args = []
+    # Instantiate run arguments (applies to all experiments)
+    run_args = RunArgs()
 
     # Set experiment parameters
     seed = 42 #TODO: average over seeds?
-    env_ids = [
-        "Ant-v4",
-        "HalfCheetah-v4",
-        # "Hopper-v4", #TODO: fix XML file
-        "Humanoid-v4",
-        # "Walker2d-v4", #TODO: fix XML file
-    ]
-    cx_modes = ["causal", "random"]
     test_buffer_sizes = [10_000, 100_000, 500_000, 1_000_000]
 
     # Set training parameters
@@ -110,9 +100,9 @@ if __name__ == "__main__":
                 buffer_size:{
                     cx_mode:{
                         epoch_i:[] for epoch_i in range(n_epochs)
-                    } for cx_mode in cx_modes
+                    } for cx_mode in run_args.cx_modes
                 } for buffer_size in test_buffer_sizes
-            } for env_id in env_ids        
+            } for env_id in run_args.env_ids
         })
         loss_data_dir = os.path.join("runs", "predict_rewards")
         os.makedirs(loss_data_dir, exist_ok=True)
@@ -121,13 +111,14 @@ if __name__ == "__main__":
         start_time = time.strftime('%Y-%m-%d %H:%M:%S')
 
         # Test all environments
-        for env_id in env_ids:
+        process_args = []
+        for env_id in run_args.env_ids:
 
             # Test all buffer sizes
             for buffer_size in test_buffer_sizes:
 
                 # Test cx modes (causal vs random)
-                for cx_mode in cx_modes:
+                for cx_mode in run_args.cx_modes:
 
                     # Create experiment arguments
                     exp_args = ExperimentArgs(
@@ -144,7 +135,7 @@ if __name__ == "__main__":
                     process_args.append((exp_args))
 
         # Start processes
-        with mp.Pool(processes=num_workers) as pool:
+        with mp.Pool(processes=run_args.num_workers) as pool:
             pool.map(train_q_model, process_args)
 
         # Record end time and report progress
