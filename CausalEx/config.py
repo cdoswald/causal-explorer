@@ -26,11 +26,11 @@ class RunArgs:
     use_n_seeds: int = 10 # Current max is 100
     """number of random seeds to test (results averaged over all seeds)"""
     env_ids: Tuple[str] = (
-        "Ant-v5",
         "HalfCheetah-v5",
         "Hopper-v5",
         # "Humanoid-v5", # TODO: fix memory issues
         "Walker2d-v5",
+        "Ant-v5",
     )
     """list of MuJoCo environments to use in experiments"""
     cx_modes: Tuple[str] = ("causal", "random")
