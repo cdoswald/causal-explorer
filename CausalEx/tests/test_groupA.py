@@ -3,23 +3,23 @@ import multiprocessing as mp
 import os
 import time
 
+import numpy as np
+
 from CausalEx.config import RunArgs, ExperimentArgs
 from CausalEx.A_run_single_experiment import run_single_experiment
 
 
 def test_A_run_all_experiments():
 
+    # Test multiple seeds
+    seeds = [234, 8920]
+
     # Instantiate run arguments (applies to all experiments)
     run_args = RunArgs()
-    run_args.run_name = f"regression_test_{time.strftime('%Y%m%d_%H%M%S')}"
-    run_args.run_dir = os.path.join("runs", "testing", run_args.run_name)
+    run_args.run_name = f"test_{time.strftime('%Y%m%d_%H%M%S')}"
+    run_args.run_dir = os.path.join("regression_tests", run_args.run_name)
     run_args.setup_dirs()
-
-    run_args.use_n_seeds = 2
-
-    # Load random seeds
-    with open("../seeds_list.json", "r") as io:
-        seeds = json.load(io)[:run_args.use_n_seeds]
+    run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
 
     ## ------------------------------------------------------------------------
     ## Unfortunately, have to reproduce most of the "run_all_experiments" function
@@ -34,7 +34,11 @@ def test_A_run_all_experiments():
                     cx_mode=cx_mode,
                     seed=seed,
                 )
+                exp_args.run_dir = run_args.run_dir
                 exp_args.create_exp_dir()
+                exp_args.save_config(
+                    os.path.join(exp_args.exp_dir, "exp_config.json")
+                )
 
                 # Modify experiment args to reduce time for testing
                 exp_args.train_timesteps = 1000
@@ -48,6 +52,3 @@ def test_A_run_all_experiments():
     # Start processes
     with mp.Pool(processes=run_args.num_workers) as pool:
         pool.map(run_single_experiment, process_args)
-    
-    # Clean up directories
-    #TODO

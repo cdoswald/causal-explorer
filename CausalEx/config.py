@@ -9,12 +9,13 @@ class RunArgs:
 
     # Developer settings
     debug_mode: bool = False
+    save_frequency: int = 10_000
 
     # Multiprocessing settings
-    num_workers: int = 24 # num_cores = os.cpu_count()
+    num_workers: int = 16 # num_cores = os.cpu_count()
 
     # Directory settings
-    run_name: str = "SAC_241202v1"
+    run_name: str = "SAC_241204v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -40,7 +41,7 @@ class RunArgs:
         os.makedirs(self.run_dir, exist_ok=self.overwrite_run_dir)
 
     def save_config(self, path) -> None:
-        """Save configuration panext_state_actionsrameters for reference."""
+        """Save configuration parameters for reference."""
         with open(path, "w") as file:
             json.dump(self.__dict__, file, indent=4)
     
@@ -64,7 +65,7 @@ class ExperimentArgs(RunArgs):
     """seed of the experiment"""
 
     # RL algorithm-specific arguments
-    train_timesteps: int = 500_000 #100_000
+    train_timesteps: int = 50_000 #100_000
     """total training timesteps of the experiments"""
     eval_timesteps: int = 10_000
     """total evaluation timesteps of the experiments"""

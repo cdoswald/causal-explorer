@@ -10,9 +10,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from stable_baselines3.common.buffers import ReplayBuffer
 
-from causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
-from models import Actor, SoftQNetwork
-from utils import save_dict_to_hdf5
+from CausalEx.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
+from CausalEx.models import Actor, SoftQNetwork
+from CausalEx.utils import save_dict_to_hdf5
 
 
 # Based on CleanRL SAC implementation
@@ -184,7 +184,7 @@ def run_single_experiment(args):
                     target_param.data.copy_(args.tau * param.data + (1 - args.tau) * target_param.data)
 
         # Save models and metrics (periodically or after final training step)
-        if (global_step % 10_000 == 0) or (global_step == (args.train_timesteps - 1)):
+        if (global_step % args.save_frequency == 0) or (global_step == (args.train_timesteps - 1)):
             # Models
             torch.save(actor.state_dict(), os.path.join(args.exp_dir, "actor.pth"))
             torch.save(qf1.state_dict(), os.path.join(args.exp_dir, "qf1.pth"))
