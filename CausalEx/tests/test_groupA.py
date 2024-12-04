@@ -1,9 +1,6 @@
-import json
 import multiprocessing as mp
 import os
 import time
-
-import numpy as np
 
 from CausalEx.config import RunArgs, ExperimentArgs
 from CausalEx.A_run_single_experiment import run_single_experiment

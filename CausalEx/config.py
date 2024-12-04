@@ -28,15 +28,15 @@ class RunArgs:
     env_ids: Tuple[str] = (
         "HalfCheetah-v5",
         "Hopper-v5",
-        # "Humanoid-v5", # TODO: fix memory issues
         "Walker2d-v5",
         "Ant-v5",
+        # "Humanoid-v5", # TODO: fix memory issues
     )
     """list of MuJoCo environments to use in experiments"""
     cx_modes: Tuple[str] = ("causal", "random")
     """replay buffer prepopulation methods to test; options: {'causal', 'random'}"""
 
-
+    # RunArgs methods
     def setup_dirs(self) -> None:
         os.makedirs(self.run_dir, exist_ok=self.overwrite_run_dir)
 
@@ -65,7 +65,7 @@ class ExperimentArgs(RunArgs):
     """seed of the experiment"""
 
     # RL algorithm-specific arguments
-    train_timesteps: int = 50_000 #100_000
+    train_timesteps: int = 10_000 #100_000
     """total training timesteps of the experiments"""
     eval_timesteps: int = 10_000
     """total evaluation timesteps of the experiments"""
@@ -98,7 +98,7 @@ class ExperimentArgs(RunArgs):
     max_steps_per_interact: int = 1000
     """number of environment steps to run per n-way interaction"""
 
-
+    # ExperimentArgs methods
     def create_exp_dir(self) -> None:
         """Create experiment directory based on run name, env_id, cx_mode, and seed."""
         self.exp_dir = os.path.join(
