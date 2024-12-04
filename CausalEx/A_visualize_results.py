@@ -1,7 +1,5 @@
 import glob
 import h5py
-from itertools import chain
-import json
 import os
 
 import matplotlib.pyplot as plt
