@@ -1,4 +1,3 @@
-import json
 import os
 import random
 import time
@@ -13,6 +12,7 @@ from stable_baselines3.common.buffers import ReplayBuffer
 
 from causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
 from models import Actor, SoftQNetwork
+from utils import save_dict_to_hdf5
 
 
 # Based on CleanRL SAC implementation
@@ -74,9 +74,9 @@ def run_single_experiment(args):
         )
 
     # TRY NOT TO MODIFY: start the game
-    loss_dict = {"critic1":{}, "critic2":{}, "actor":{}, "alpha":{}}
-    episode_rewards = []
-    episode_lengths = []
+    loss_dict = {"critic1":[], "critic2":[], "actor":[], "alpha":[]}
+    metrics_dict = {"cumulative_rewards":[], "episode_rewards":[], "episode_lengths":[]}
+    cumulative_reward = np.float32(0)
     episode_reward = np.float32(0)
     episode_length = 0
     obs, _ = env.reset(seed=args.seed)
@@ -99,11 +99,15 @@ def run_single_experiment(args):
         #         writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
         #         writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
         #         break
-        episode_reward += np.float32(round(rewards, 5))
+        rounded_reward = np.float32(round(rewards, 5))
+        cumulative_reward += rounded_reward
+        metrics_dict["cumulative_rewards"].append(cumulative_reward)
+
+        episode_reward += rounded_reward
         episode_length += 1
         if "episode" in infos:
-            episode_rewards.append(episode_reward)
-            episode_lengths.append(episode_length)
+            metrics_dict["episode_rewards"].append(episode_reward)
+            metrics_dict["episode_lengths"].append(episode_length)
             print(f"global_step={global_step}, episodic_return={infos['episode']['r']}")
 
         # Reset environment on termination or truncation
@@ -132,8 +136,8 @@ def run_single_experiment(args):
             qf_loss = qf1_loss + qf2_loss
 
             # record losses
-            loss_dict["critic1"][global_step] = np.float32(round(qf1_loss.item(), 5))
-            loss_dict["critic2"][global_step] = np.float32(round(qf2_loss.item(), 5))
+            loss_dict["critic1"].append(np.float32(round(qf1_loss.item(), 5)))
+            loss_dict["critic2"].append(np.float32(round(qf2_loss.item(), 5)))
 
             # optimize the model
             q_optimizer.zero_grad()
@@ -169,8 +173,8 @@ def run_single_experiment(args):
                         alpha = log_alpha.exp().item()
 
                 # record losses
-                loss_dict["actor"][global_step] = temp_actor_losses
-                loss_dict["alpha"][global_step] = temp_alpha_losses
+                loss_dict["actor"] += temp_actor_losses
+                loss_dict["alpha"] += temp_alpha_losses
 
             # update the target networks
             if global_step % args.target_network_frequency == 0:
@@ -179,20 +183,21 @@ def run_single_experiment(args):
                 for param, target_param in zip(qf2.parameters(), qf2_target.parameters()):
                     target_param.data.copy_(args.tau * param.data + (1 - args.tau) * target_param.data)
 
-    # Save models
-    torch.save(actor.state_dict(), os.path.join(args.exp_dir, "actor.pth"))
-    torch.save(qf1.state_dict(), os.path.join(args.exp_dir, "qf1.pth"))
-    torch.save(qf2.state_dict(), os.path.join(args.exp_dir, "qf2.pth"))
-
-    # Save metrics
-    with open(os.path.join(args.exp_dir, "episode_rewards.json"), "w") as io:
-        json.dump(episode_rewards, io)
-    with open(os.path.join(args.exp_dir, "episode_lengths.json"), "w") as io:
-        json.dump(episode_lengths, io)
-
-    # Save loss data
-    with open(os.path.join(args.exp_dir, "loss_data.json"), "w") as io:
-        json.dump(loss_dict, io)
+        # Save models and metrics (periodically or after final training step)
+        if (global_step % 10_000 == 0) or (global_step == (args.train_timesteps - 1)):
+            # Models
+            torch.save(actor.state_dict(), os.path.join(args.exp_dir, "actor.pth"))
+            torch.save(qf1.state_dict(), os.path.join(args.exp_dir, "qf1.pth"))
+            torch.save(qf2.state_dict(), os.path.join(args.exp_dir, "qf2.pth"))
+            # Metrics
+            metrics_path = os.path.join(args.exp_dir, "metrics.h5")
+            save_dict_to_hdf5(metrics_path, metrics_dict)
+            # Loss data
+            loss_data_path = os.path.join(args.exp_dir, "loss_data.h5")
+            save_dict_to_hdf5(loss_data_path, loss_dict)
+            # Reset metric lists to reduce memory usage
+            loss_dict = {"critic1":[], "critic2":[], "actor":[], "alpha":[]}
+            metrics_dict = {"cumulative_rewards":[], "episode_rewards":[], "episode_lengths":[]}
 
     # Clean up
     env.close()
