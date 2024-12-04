@@ -17,15 +17,15 @@ def main():
 
     # Instantiate run arguments (applies to all experiments)
     run_args = RunArgs()
-    # run_args.setup_dirs()
-    # run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
+    run_args.setup_dirs()
+    run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
 
     # Load random seeds
     with open("seeds_list.json", "r") as io:
         seeds = json.load(io)[:run_args.use_n_seeds]
 
     # Run experiments
-    # run_all_experiments(run_args, seeds)
+    run_all_experiments(run_args, seeds)
 
     # Create visualizations
     visualize_episode_rewards(run_args)
