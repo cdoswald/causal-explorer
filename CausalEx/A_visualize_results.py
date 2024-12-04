@@ -1,4 +1,5 @@
 import glob
+import h5py
 from itertools import chain
 import json
 import os
@@ -6,8 +7,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
-from config import RunArgs
 
 # Define constants
 COLORS = {"causal":"blue", "random":"green"}
@@ -26,10 +25,10 @@ def visualize_episode_rewards(run_args):
             # Load metrics
             exp_rewards_all = []
             for exp_dir in exp_dirs:
-                exp_rewards_path = os.path.join(exp_dir, "episode_rewards.json")
+                exp_rewards_path = os.path.join(exp_dir, "metrics.h5")
                 if os.path.exists(exp_rewards_path):
-                    with open(exp_rewards_path, "r") as io:
-                        exp_rewards_all.append(json.load(io))
+                    with h5py.File(exp_rewards_path, "r") as file:
+                        exp_rewards_all.append(list(file["episode_rewards"][:]))
             # Clip metrics lists so that all seeds have same number of episodes
             min_num_episodes = min([len(exp) for exp in exp_rewards_all])
             rewards = np.array([exp[:min_num_episodes] for exp in exp_rewards_all]).T
@@ -56,7 +55,6 @@ def visualize_episode_rewards(run_args):
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.set_xlabel("Episode")
         ax.set_title(f"Environment: {env_id} average episode reward")
-        fig.suptitle()
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_episode_rewards.png"),
             bbox_inches="tight",
@@ -74,10 +72,10 @@ def visualize_episode_lengths(run_args):
             # Load metrics
             exp_lengths_all = []
             for exp_dir in exp_dirs:
-                exp_lengths_path = os.path.join(exp_dir, "episode_lengths.json")
+                exp_lengths_path = os.path.join(exp_dir, "metrics.h5")
                 if os.path.exists(exp_lengths_path):
-                    with open(exp_lengths_path, "r") as io:
-                        exp_lengths_all.append(json.load(io))
+                    with h5py.File(exp_lengths_path, "r") as file:
+                        exp_lengths_all.append(list(file["episode_lengths"][:]))
             # Clip metrics lists so that all seeds have same number of episodes
             min_num_episodes = min([len(exp) for exp in exp_lengths_all])
             lengths = np.array([exp[:min_num_episodes] for exp in exp_lengths_all]).T
@@ -104,7 +102,6 @@ def visualize_episode_lengths(run_args):
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.set_xlabel("Episode")
         ax.set_title(f"Environment: {env_id} average episode length")
-        fig.suptitle()
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_episode_lengths.png"),
             bbox_inches="tight",
@@ -121,24 +118,20 @@ def visualize_model_losses(run_args):
             exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
             exp_dirs = [f for f in glob.glob(exp_folder_pattern) if os.path.isdir(f)]
             # Load loss data
-            loss_data_all = []
+            loss_data_all = {"critic1":[], "critic2":[], "actor":[], "alpha":[]}
             for exp_dir in exp_dirs:
-                loss_data_path = os.path.join(exp_dir, "loss_data.json")
+                loss_data_path = os.path.join(exp_dir, "loss_data.h5")
                 if os.path.exists(loss_data_path):
-                    with open(loss_data_path, "r") as io:
-                        loss_data_all.append(json.load(io))
-            # Unnest loss data and create matrices of shape (n_steps, m_experiments)
-            # Note that actor and alpha are updated x times every x timesteps (so formatting is different)
-            critic1_losses = np.array([list(exp['critic1'].values()) for exp in loss_data_all]).T
-            critic2_losses = np.array([list(exp['critic2'].values()) for exp in loss_data_all]).T
-            actor_losses = np.array([
-                list(chain.from_iterable(exp['actor'].values()))
-                for exp in loss_data_all
-            ]).T
-            alpha_losses = np.array([
-                list(chain.from_iterable(exp['alpha'].values()))
-                for exp in loss_data_all
-            ]).T
+                    with h5py.File(loss_data_path, "r") as file:
+                        loss_data_all["critic1"].append(list(file["critic1"][:]))
+                        loss_data_all["critic2"].append(list(file["critic2"][:]))
+                        loss_data_all["actor"].append(list(file["actor"][:]))
+                        loss_data_all["alpha"].append(list(file["alpha"][:]))
+            # Create matries of shape (n_steps, m_experiments)
+            critic1_losses = np.array(loss_data_all['critic1']).T
+            critic2_losses = np.array(loss_data_all['critic2']).T
+            actor_losses = np.array(loss_data_all['actor']).T
+            alpha_losses = np.array(loss_data_all['alpha']).T
             # Calculate mean of losses across all seeds
             avg_step_critic1_loss = np.mean(critic1_losses, axis=1)
             avg_step_critic2_loss = np.mean(critic2_losses, axis=1)
