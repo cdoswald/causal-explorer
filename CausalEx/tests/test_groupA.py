@@ -17,7 +17,7 @@ def test_A_run_all_experiments():
     # Instantiate run arguments (applies to all experiments)
     run_args = RunArgs()
     run_args.run_name = f"test_{time.strftime('%Y%m%d_%H%M%S')}"
-    run_args.run_dir = os.path.join("regression_tests", run_args.run_name)
+    run_args.run_dir = os.path.join("test_runs", run_args.run_name)
     run_args.setup_dirs()
     run_args.save_config(os.path.join(run_args.run_dir, "run_config.json"))
 
