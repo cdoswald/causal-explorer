@@ -215,3 +215,11 @@ def visualize_model_losses(run_args):
             os.path.join(run_args.run_dir, f"env_{env_id}_losses.png"),
             bbox_inches="tight",
         )
+
+
+if __name__ == "__main__":
+    from config import RunArgs
+    run_args = RunArgs()
+    visualize_episode_rewards(run_args)
+    visualize_episode_lengths(run_args)
+    visualize_model_losses(run_args)
