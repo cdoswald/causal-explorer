@@ -15,7 +15,7 @@ class RunArgs:
     num_workers: int = 16 # num_cores = os.cpu_count()
 
     # Directory settings
-    run_name: str = "SAC_241204v2"
+    run_name: str = "SAC_241205v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -23,7 +23,7 @@ class RunArgs:
     """directory to store all experiment results"""
 
     # General settings
-    use_n_seeds: int = 10 # Current max is 100
+    use_n_seeds: int = 20 # Current max is 100
     """number of random seeds to test (results averaged over all seeds)"""
     env_ids: Tuple[str] = (
         "HalfCheetah-v5",
