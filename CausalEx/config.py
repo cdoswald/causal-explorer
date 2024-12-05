@@ -12,7 +12,7 @@ class RunArgs:
     save_frequency: int = 10_000
 
     # Multiprocessing settings
-    num_workers: int = 16 # num_cores = os.cpu_count()
+    num_workers: int = 20 # num_cores = os.cpu_count()
 
     # Directory settings
     run_name: str = "SAC_241205v1"
