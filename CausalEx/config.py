@@ -15,7 +15,7 @@ class RunArgs:
     num_workers: int = 20 # num_cores = os.cpu_count()
 
     # Directory settings
-    run_name: str = "SAC_241205v1"
+    run_name: str = "SAC_241206v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -65,7 +65,7 @@ class ExperimentArgs(RunArgs):
     """seed of the experiment"""
 
     # RL algorithm-specific arguments
-    train_timesteps: int = 100_000 #100_000
+    train_timesteps: int = 200_000 #100_000
     """total training timesteps of the experiments"""
     eval_timesteps: int = 10_000
     """total evaluation timesteps of the experiments"""
