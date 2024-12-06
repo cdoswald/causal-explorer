@@ -63,3 +63,7 @@ def main():
     # Record end time and report progress
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
     print(f"Run start time: {start_time} \nRun end time: {end_time}")
+
+
+if __name__ == "__main__":
+    main()
