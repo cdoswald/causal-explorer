@@ -1,8 +1,17 @@
 import h5py
+from math import comb
 from typing import Dict, List
 
 import cv2
 import numpy as np
+
+
+def calculate_n_interactions(n_action_dims: int):
+    """Calculate number of unique interactions for action space."""
+    total_combinations = 0
+    for i in range(1, n_action_dims+1): # Note that C(n_action_dims, 0) is not applicable
+        total_combinations += comb(n_action_dims, i)
+    return total_combinations
 
 
 def save_video(frames, save_path, fps=30):

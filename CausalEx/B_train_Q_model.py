@@ -17,6 +17,7 @@ from stable_baselines3.common.buffers import ReplayBuffer
 
 from CausalEx.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
 from CausalEx.models import SoftQNetwork
+from CausalEx.utils import calculate_n_interactions
 
 
 def train_Q_model(args):
@@ -47,11 +48,18 @@ def train_Q_model(args):
         device,
         handle_timeout_termination=False,
     )
+    n_interact = calculate_n_interactions(env.action_space.shape[0])
+    args.prepopulate_buffer_hard_cap = args.buffer_size
+    args.max_steps_per_interact = args.buffer_size // n_interact
     if args.cx_mode.lower() == "causal":
         rb = prepopulate_buffer_causal(env, rb, args)
     elif args.cx_mode.lower() == "random":
         rb = prepopulate_buffer_random(env, rb, args)
-        
+    else:
+        raise ValueError(f"Unrecognized cx_mode: {args.cx_mode}")
+    empty_entries = np.sum(np.sum(rb.observations, axis=1) == 0)
+    print(f"Empty entries/buffer size: {empty_entries}/{args.buffer_size}")
+
     # Train Q-model to predict reward conditional on state and action
     epoch_losses = []
     for epoch_i in range(args.n_epochs):

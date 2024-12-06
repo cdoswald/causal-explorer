@@ -18,7 +18,7 @@ def main():
         seeds = json.load(io)[:run_args.use_n_seeds]
 
     # Set experiment parameters
-    run_args.test_buffer_sizes = [5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000]
+    run_args.test_buffer_sizes = [10_000, 100_000, 1_000_000]
 
     # Set training parameters
     n_epochs = 20

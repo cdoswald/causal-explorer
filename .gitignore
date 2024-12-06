@@ -3,6 +3,9 @@ runs/
 test_runs/
 videos/
 
+# VSCode files
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
