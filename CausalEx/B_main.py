@@ -6,6 +6,7 @@ import time
 from CausalEx.config import RunArgs, ExperimentArgs
 from CausalEx.B_train_Q_model import train_Q_model
 
+
 def main():
 
     # Instantiate run arguments (applies to all experiments)
@@ -59,6 +60,8 @@ def main():
     # Start processes
     with mp.Pool(processes=run_args.num_workers) as pool:
         pool.map(train_Q_model, process_args)
+
+    # Visualize epoch losses
 
     # Record end time and report progress
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
