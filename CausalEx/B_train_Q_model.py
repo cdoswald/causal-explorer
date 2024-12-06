@@ -19,7 +19,7 @@ from CausalEx.causal_explorer import prepopulate_buffer_causal, prepopulate_buff
 from CausalEx.models import SoftQNetwork
 
 
-def train_qmodel(args):
+def train_Q_model(args):
 
     # Set seeds
     random.seed(args.seed)
