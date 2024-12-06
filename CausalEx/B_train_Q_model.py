@@ -71,7 +71,7 @@ def train_Q_model(args):
         print(f"Completed epoch {epoch_i + 1} with avg loss {round(avg_epoch_loss, 5)}")
 
     # Save epoch losses to disk
-    file_name = f"reward_epoch_losses_env_{args.env_id}_mode_{args.cx_mode}_buffer_{args.buffer_size}.json"
+    file_name = f"epoch_losses_env_{args.env_id}_mode_{args.cx_mode}_buffer_{args.buffer_size}_seed_{args.seed}.json"
     with open(os.path.join(args.loss_data_dir, file_name), "w") as io:
         json.dump(epoch_losses, io)
         print(f"Successfully saved {file_name} file")

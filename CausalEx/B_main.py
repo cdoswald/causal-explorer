@@ -5,6 +5,7 @@ import time
 
 from CausalEx.config import RunArgs, ExperimentArgs
 from CausalEx.B_train_Q_model import train_Q_model
+from CausalEx.B_visualize_epoch_losses import visualize_epoch_losses
 
 
 def main():
@@ -17,15 +18,22 @@ def main():
         seeds = json.load(io)[:run_args.use_n_seeds]
 
     # Set experiment parameters
-    test_buffer_sizes = [5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000]
+    run_args.test_buffer_sizes = [
+        5_000,
+        10_000,
+        50_000,
+        100_000,
+        500_000,
+        1_000_000,
+    ]
 
     # Set training parameters
     n_epochs = 20
     n_samples_per_epoch = 5000
 
     # Set up loss data directory
-    loss_data_dir = os.path.join("runs", "predict_rewards")
-    os.makedirs(loss_data_dir, exist_ok=True)
+    run_args.loss_data_dir = os.path.join("runs", "predict_rewards")
+    os.makedirs(run_args.loss_data_dir, exist_ok=True)
 
     # Record start time
     start_time = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -35,7 +43,7 @@ def main():
     for env_id in run_args.env_ids:
 
         # Test all buffer sizes
-        for buffer_size in test_buffer_sizes:
+        for buffer_size in run_args.test_buffer_sizes:
 
             # Test cx modes (causal vs random)
             for cx_mode in run_args.cx_modes:
@@ -52,7 +60,7 @@ def main():
                     )
                     exp_args.n_epochs = n_epochs
                     exp_args.n_samples_per_epoch = n_samples_per_epoch
-                    exp_args.loss_data_dir = loss_data_dir
+                    exp_args.loss_data_dir = run_args.loss_data_dir
 
                     # Add experiment-specific arguments to processes list
                     process_args.append((exp_args))
@@ -62,6 +70,7 @@ def main():
         pool.map(train_Q_model, process_args)
 
     # Visualize epoch losses
+    visualize_epoch_losses(run_args)
 
     # Record end time and report progress
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
