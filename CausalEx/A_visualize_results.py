@@ -52,7 +52,8 @@ def visualize_episode_rewards(run_args):
         # Label plot
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.set_xlabel("Episode")
-        ax.set_title(f"Environment: {env_id} average episode reward")
+        ax.set_ylabel("Average Episode Reward")
+        ax.set_title(f"Average Episode Reward by Episode ({env_id})")
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_episode_rewards.png"),
             bbox_inches="tight",
@@ -99,9 +100,56 @@ def visualize_episode_lengths(run_args):
         # Label plot
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.set_xlabel("Episode")
-        ax.set_title(f"Environment: {env_id} average episode length")
+        ax.set_ylabel("Average Episode Length")
+        ax.set_title(f"Average Episode Length by Episode ({env_id})")
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_episode_lengths.png"),
+            bbox_inches="tight",
+        )
+
+
+def visualize_cumulative_rewards(run_args):
+    """Visualize cumulative rewards by global timestep across random seeds."""
+    for env_id in run_args.env_ids:
+        fig, ax = plt.subplots(1, 1, figsize=(16,6))
+        for cx_mode in run_args.cx_modes:
+            # Get all experiment folders
+            exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
+            exp_dirs = [f for f in glob.glob(exp_folder_pattern) if os.path.isdir(f)]
+            # Load metrics
+            exp_rewards_all = []
+            for exp_dir in exp_dirs:
+                exp_rewards_path = os.path.join(exp_dir, "metrics.h5")
+                if os.path.exists(exp_rewards_path):
+                    with h5py.File(exp_rewards_path, "r") as file:
+                        exp_rewards_all.append(list(file["cumulative_rewards"][:]))
+            rewards = np.array(exp_rewards_all).T
+            # Average the cumulative average returns across experiments
+            avg_cumul_rewards = np.mean(rewards, axis=1)
+            sd_cumul_rewards = np.std(rewards, axis=1)
+            # Plot mean and standard deviation
+            sns.lineplot(
+                x=range(rewards.shape[0]),
+                y=avg_cumul_rewards,
+                ax=ax,
+                label=f"{cx_mode}",
+                color=COLORS[cx_mode],
+                linewidth=LINEWIDTH,
+            )
+            ax.fill_between(
+                x=range(rewards.shape[0]),
+                y1=avg_cumul_rewards - sd_cumul_rewards,
+                y2=avg_cumul_rewards + sd_cumul_rewards, 
+                color=COLORS[cx_mode],
+                alpha=ALPHA,
+            )
+        # Label plot
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        ax.set_xlabel("Global Timestep")
+        ax.set_ylabel("Cumulative Reward")
+        ax.set_title(f"Cumulative Reward by Timestep ({env_id})")
+        fig.savefig(
+            os.path.join(run_args.run_dir, f"env_{env_id}_cumul_rewards.png"),
             bbox_inches="tight",
         )
 
@@ -210,7 +258,7 @@ def visualize_model_losses(run_args):
         axes[2].set_title("Actor loss", loc="left")
         axes[3].set_title("Alpha loss", loc="left")
         fig.align_ylabels()
-        fig.suptitle(f"Environment: {env_id}")
+        fig.suptitle(f"Model Losses ({env_id})")
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_losses.png"),
             bbox_inches="tight",
@@ -218,8 +266,9 @@ def visualize_model_losses(run_args):
 
 
 if __name__ == "__main__":
-    from config import RunArgs
+    from CausalEx.config import RunArgs
     run_args = RunArgs()
     visualize_episode_rewards(run_args)
     visualize_episode_lengths(run_args)
+    visualize_cumulative_rewards(run_args)
     visualize_model_losses(run_args)

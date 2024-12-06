@@ -8,6 +8,7 @@ from A_run_all_experiments import run_all_experiments
 from A_visualize_results import (
     visualize_episode_rewards,
     visualize_episode_lengths,
+    visualize_cumulative_rewards,
     visualize_model_losses,
 )
 
@@ -30,6 +31,7 @@ def main():
     # Create visualizations
     visualize_episode_rewards(run_args)
     visualize_episode_lengths(run_args)
+    visualize_cumulative_rewards(run_args)
     visualize_model_losses(run_args)
 
     end_time = time.strftime('%Y-%m-%d %H:%M:%S')
