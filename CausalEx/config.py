@@ -97,6 +97,8 @@ class ExperimentArgs(RunArgs):
     """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_steps_per_interact: int = 1000
     """number of environment steps to run per n-way interaction"""
+    sort_interact_high_to_low: bool = True
+    """indicator to prioritize higher-order interactions over lower-order"""
 
     # ExperimentArgs methods
     def create_exp_dir(self) -> None:

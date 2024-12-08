@@ -58,7 +58,8 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
             x for x in combinations(range(n_action_dims), interaction_level)
         ]
         interaction_level += 1
-    interaction_col_idxs = [x for x in reversed(interaction_col_idxs)]
+    if args.sort_interact_high_to_low:
+        interaction_col_idxs = [x for x in reversed(interaction_col_idxs)]
 
     # Generate experimental data
     obs, _ = env.reset(seed=(args.seed + ADJUST_SEED))
