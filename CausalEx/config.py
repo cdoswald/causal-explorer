@@ -15,7 +15,7 @@ class RunArgs:
     num_workers: int = 20 # num_cores = os.cpu_count()
 
     # Directory settings
-    run_name: str = "SAC_241206v1"
+    run_name: str = "SAC_241208v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -97,7 +97,7 @@ class ExperimentArgs(RunArgs):
     """hard maximum for total number of observations to prepopulate in replay buffer"""
     max_steps_per_interact: int = 1000
     """number of environment steps to run per n-way interaction"""
-    sort_interact_high_to_low: bool = True
+    sort_interact_high_to_low: bool = False
     """indicator to prioritize higher-order interactions over lower-order"""
 
     # ExperimentArgs methods
