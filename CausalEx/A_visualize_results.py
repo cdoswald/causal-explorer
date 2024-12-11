@@ -7,7 +7,7 @@ import numpy as np
 import seaborn as sns
 
 # Define constants
-COLORS = {"causal":"blue", "random":"green"}
+COLORS = {"causal":"tab:blue", "random":"tab:green"}
 LINEWIDTH = 1
 ALPHA = 0.2
 
