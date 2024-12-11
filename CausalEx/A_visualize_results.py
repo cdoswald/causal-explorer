@@ -10,6 +10,7 @@ import seaborn as sns
 COLORS = {"causal":"tab:blue", "random":"tab:green"}
 LINEWIDTH = 1
 ALPHA = 0.2
+INCLUDE_TITLES = False
 
 
 def visualize_episode_rewards(run_args):
@@ -33,7 +34,12 @@ def visualize_episode_rewards(run_args):
             # Calculate mean and standard dev of metrics across all seeds
             avg_episode_reward = np.mean(rewards, axis=1)
             sd_episode_reward = np.std(rewards, axis=1)
-            # Plot mean and standard deviation
+            min_episode_reward = np.min(rewards, axis=1)
+            max_episode_reward = np.max(rewards, axis=1)
+            p10_episode_reward = np.percentile(rewards, q=0.1, axis=1)
+            p50_episode_reward = np.percentile(rewards, q=0.5, axis=1)
+            p90_episode_reward = np.percentile(rewards, q=0.9, axis=1)
+            # Plot mean and range
             sns.lineplot(
                 x=range(min_num_episodes),
                 y=avg_episode_reward,
@@ -44,8 +50,8 @@ def visualize_episode_rewards(run_args):
             )
             ax.fill_between(
                 x=range(min_num_episodes),
-                y1=avg_episode_reward - sd_episode_reward,
-                y2=avg_episode_reward + sd_episode_reward, 
+                y1=min_episode_reward,
+                y2=max_episode_reward, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
@@ -53,7 +59,8 @@ def visualize_episode_rewards(run_args):
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.set_xlabel("Episode")
         ax.set_ylabel("Average Episode Reward")
-        ax.set_title(f"Average Episode Reward by Episode ({env_id})")
+        if INCLUDE_TITLES:
+            ax.set_title(f"Average Episode Reward by Episode ({env_id})")
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_episode_rewards.png"),
             bbox_inches="tight",
@@ -81,7 +88,12 @@ def visualize_episode_lengths(run_args):
             # Calculate mean and standard dev of metrics across all seeds
             avg_episode_length = np.mean(lengths, axis=1)
             sd_episode_length = np.std(lengths, axis=1)
-            # Plot mean and standard deviation
+            min_episode_length = np.min(lengths, axis=1)
+            max_episode_length = np.max(lengths, axis=1)
+            p10_episode_length = np.percentile(lengths, q=0.1, axis=1)
+            p50_episode_length = np.percentile(lengths, q=0.5, axis=1)
+            p90_episode_length = np.percentile(lengths, q=0.9, axis=1)
+            # Plot mean and range
             sns.lineplot(
                 x=range(min_num_episodes),
                 y=avg_episode_length,
@@ -92,8 +104,8 @@ def visualize_episode_lengths(run_args):
             )
             ax.fill_between(
                 x=range(min_num_episodes),
-                y1=avg_episode_length - sd_episode_length,
-                y2=avg_episode_length + sd_episode_length, 
+                y1=min_episode_length,
+                y2=max_episode_length,
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
@@ -101,7 +113,8 @@ def visualize_episode_lengths(run_args):
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.set_xlabel("Episode")
         ax.set_ylabel("Average Episode Length")
-        ax.set_title(f"Average Episode Length by Episode ({env_id})")
+        if INCLUDE_TITLES:
+            ax.set_title(f"Average Episode Length by Episode ({env_id})")
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_episode_lengths.png"),
             bbox_inches="tight",
@@ -127,7 +140,9 @@ def visualize_cumulative_rewards(run_args):
             # Average the cumulative average returns across experiments
             avg_cumul_rewards = np.mean(rewards, axis=1)
             sd_cumul_rewards = np.std(rewards, axis=1)
-            # Plot mean and standard deviation
+            min_cumul_rewards = np.min(rewards, axis=1)
+            max_cumul_rewards = np.max(rewards, axis=1)
+            # Plot mean and range
             sns.lineplot(
                 x=range(rewards.shape[0]),
                 y=avg_cumul_rewards,
@@ -138,8 +153,8 @@ def visualize_cumulative_rewards(run_args):
             )
             ax.fill_between(
                 x=range(rewards.shape[0]),
-                y1=avg_cumul_rewards - sd_cumul_rewards,
-                y2=avg_cumul_rewards + sd_cumul_rewards, 
+                y1=min_cumul_rewards,
+                y2=max_cumul_rewards, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
@@ -147,7 +162,8 @@ def visualize_cumulative_rewards(run_args):
         ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.set_xlabel("Global Timestep")
         ax.set_ylabel("Cumulative Reward")
-        ax.set_title(f"Cumulative Reward by Timestep ({env_id})")
+        if INCLUDE_TITLES:
+            ax.set_title(f"Cumulative Reward by Timestep ({env_id})")
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_cumul_rewards.png"),
             bbox_inches="tight",
@@ -188,7 +204,16 @@ def visualize_model_losses(run_args):
             sd_step_critic2_loss = np.std(critic2_losses, axis=1)
             sd_step_actor_loss = np.std(actor_losses, axis=1)
             sd_step_alpha_loss = np.std(alpha_losses, axis=1)
-            # Plot mean and standard deviation
+            # Calculate min and max of losses across seeds
+            min_step_critic1_loss = np.min(critic1_losses, axis=1)
+            min_step_critic2_loss = np.min(critic2_losses, axis=1)
+            min_step_actor_loss = np.min(actor_losses, axis=1)
+            min_step_alpha_loss = np.min(alpha_losses, axis=1)
+            max_step_critic1_loss = np.max(critic1_losses, axis=1)
+            max_step_critic2_loss = np.max(critic2_losses, axis=1)
+            max_step_actor_loss = np.max(actor_losses, axis=1)
+            max_step_alpha_loss = np.max(alpha_losses, axis=1)
+            # Plot mean and range
             sns.lineplot(
                 x=range(len(avg_step_critic1_loss)),
                 y=avg_step_critic1_loss,
@@ -223,29 +248,29 @@ def visualize_model_losses(run_args):
             )
             axes[0].fill_between(
                 x=range(len(avg_step_critic1_loss)),
-                y1=avg_step_critic1_loss - sd_step_critic1_loss,
-                y2=avg_step_critic1_loss + sd_step_critic1_loss, 
+                y1=min_step_critic1_loss,
+                y2=max_step_critic1_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
             axes[1].fill_between(
                 x=range(len(avg_step_critic2_loss)),
-                y1=avg_step_critic2_loss - sd_step_critic2_loss,
-                y2=avg_step_critic2_loss + sd_step_critic2_loss, 
+                y1=min_step_critic2_loss,
+                y2=max_step_critic2_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
             axes[2].fill_between(
                 x=range(len(avg_step_actor_loss)),
-                y1=avg_step_actor_loss - sd_step_actor_loss,
-                y2=avg_step_actor_loss + sd_step_actor_loss, 
+                y1=min_step_actor_loss,
+                y2=max_step_actor_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
             axes[3].fill_between(
                 x=range(len(avg_step_alpha_loss)),
-                y1=avg_step_alpha_loss - sd_step_alpha_loss,
-                y2=avg_step_alpha_loss + sd_step_alpha_loss, 
+                y1=min_step_alpha_loss,
+                y2=max_step_alpha_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
@@ -258,7 +283,8 @@ def visualize_model_losses(run_args):
         axes[2].set_title("Actor loss", loc="left")
         axes[3].set_title("Alpha loss", loc="left")
         fig.align_ylabels()
-        fig.suptitle(f"Model Losses ({env_id})")
+        if INCLUDE_TITLES:
+            fig.suptitle(f"Model Losses ({env_id})")
         fig.savefig(
             os.path.join(run_args.run_dir, f"env_{env_id}_losses.png"),
             bbox_inches="tight",
