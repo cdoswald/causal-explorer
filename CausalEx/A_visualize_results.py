@@ -31,18 +31,14 @@ def visualize_episode_rewards(run_args):
             # Clip metrics lists so that all seeds have same number of episodes
             min_num_episodes = min([len(exp) for exp in exp_rewards_all])
             rewards = np.array([exp[:min_num_episodes] for exp in exp_rewards_all]).T
-            # Calculate mean and standard dev of metrics across all seeds
-            avg_episode_reward = np.mean(rewards, axis=1)
-            sd_episode_reward = np.std(rewards, axis=1)
-            min_episode_reward = np.min(rewards, axis=1)
-            max_episode_reward = np.max(rewards, axis=1)
-            p10_episode_reward = np.percentile(rewards, q=0.1, axis=1)
-            p50_episode_reward = np.percentile(rewards, q=0.5, axis=1)
-            p90_episode_reward = np.percentile(rewards, q=0.9, axis=1)
-            # Plot mean and range
+            # Aggregate metrics across all seeds
+            plot_middle = np.mean(rewards, axis=1)
+            lower_bound = np.sort(rewards, axis=1)[:, 1]
+            upper_bound = np.sort(rewards, axis=1)[:, -2]
+            # Plot metrics
             sns.lineplot(
                 x=range(min_num_episodes),
-                y=avg_episode_reward,
+                y=plot_middle,
                 ax=ax,
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
@@ -50,8 +46,8 @@ def visualize_episode_rewards(run_args):
             )
             ax.fill_between(
                 x=range(min_num_episodes),
-                y1=min_episode_reward,
-                y2=max_episode_reward, 
+                y1=lower_bound,
+                y2=upper_bound, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
@@ -85,18 +81,14 @@ def visualize_episode_lengths(run_args):
             # Clip metrics lists so that all seeds have same number of episodes
             min_num_episodes = min([len(exp) for exp in exp_lengths_all])
             lengths = np.array([exp[:min_num_episodes] for exp in exp_lengths_all]).T
-            # Calculate mean and standard dev of metrics across all seeds
-            avg_episode_length = np.mean(lengths, axis=1)
-            sd_episode_length = np.std(lengths, axis=1)
-            min_episode_length = np.min(lengths, axis=1)
-            max_episode_length = np.max(lengths, axis=1)
-            p10_episode_length = np.percentile(lengths, q=0.1, axis=1)
-            p50_episode_length = np.percentile(lengths, q=0.5, axis=1)
-            p90_episode_length = np.percentile(lengths, q=0.9, axis=1)
-            # Plot mean and range
+            # Aggregate metrics across all seeds
+            plot_middle = np.mean(lengths, axis=1)
+            lower_bound = np.sort(lengths, axis=1)[:, 1]
+            upper_bound = np.sort(lengths, axis=1)[:, -2]
+            # Plot metrics
             sns.lineplot(
                 x=range(min_num_episodes),
-                y=avg_episode_length,
+                y=plot_middle,
                 ax=ax,
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
@@ -104,8 +96,8 @@ def visualize_episode_lengths(run_args):
             )
             ax.fill_between(
                 x=range(min_num_episodes),
-                y1=min_episode_length,
-                y2=max_episode_length,
+                y1=lower_bound,
+                y2=upper_bound,
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
@@ -137,15 +129,14 @@ def visualize_cumulative_rewards(run_args):
                     with h5py.File(exp_rewards_path, "r") as file:
                         exp_rewards_all.append(list(file["cumulative_rewards"][:]))
             rewards = np.array(exp_rewards_all).T
-            # Average the cumulative average returns across experiments
-            avg_cumul_rewards = np.mean(rewards, axis=1)
-            sd_cumul_rewards = np.std(rewards, axis=1)
-            min_cumul_rewards = np.min(rewards, axis=1)
-            max_cumul_rewards = np.max(rewards, axis=1)
+            # Aggregate metrics across all seeds
+            plot_middle = np.mean(rewards, axis=1)
+            lower_bound = np.sort(rewards, axis=1)[:, 1]
+            upper_bound = np.sort(rewards, axis=1)[:, -2]
             # Plot mean and range
             sns.lineplot(
                 x=range(rewards.shape[0]),
-                y=avg_cumul_rewards,
+                y=plot_middle,
                 ax=ax,
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
@@ -153,8 +144,8 @@ def visualize_cumulative_rewards(run_args):
             )
             ax.fill_between(
                 x=range(rewards.shape[0]),
-                y1=min_cumul_rewards,
-                y2=max_cumul_rewards, 
+                y1=lower_bound,
+                y2=upper_bound, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
@@ -194,83 +185,77 @@ def visualize_model_losses(run_args):
             critic2_losses = np.array(loss_data_all['critic2']).T
             actor_losses = np.array(loss_data_all['actor']).T
             alpha_losses = np.array(loss_data_all['alpha']).T
-            # Calculate mean of losses across all seeds
-            avg_step_critic1_loss = np.mean(critic1_losses, axis=1)
-            avg_step_critic2_loss = np.mean(critic2_losses, axis=1)
-            avg_step_actor_loss = np.mean(actor_losses, axis=1)
-            avg_step_alpha_loss = np.mean(alpha_losses, axis=1)
-            # Calculate standard dev of losses across all seeds
-            sd_step_critic1_loss = np.std(critic1_losses, axis=1)
-            sd_step_critic2_loss = np.std(critic2_losses, axis=1)
-            sd_step_actor_loss = np.std(actor_losses, axis=1)
-            sd_step_alpha_loss = np.std(alpha_losses, axis=1)
-            # Calculate min and max of losses across seeds
-            min_step_critic1_loss = np.min(critic1_losses, axis=1)
-            min_step_critic2_loss = np.min(critic2_losses, axis=1)
-            min_step_actor_loss = np.min(actor_losses, axis=1)
-            min_step_alpha_loss = np.min(alpha_losses, axis=1)
-            max_step_critic1_loss = np.max(critic1_losses, axis=1)
-            max_step_critic2_loss = np.max(critic2_losses, axis=1)
-            max_step_actor_loss = np.max(actor_losses, axis=1)
-            max_step_alpha_loss = np.max(alpha_losses, axis=1)
-            # Plot mean and range
+            # Aggregate metrics across all seeds
+            middle_critic1_loss = np.mean(critic1_losses, axis=1)
+            middle_critic2_loss = np.mean(critic2_losses, axis=1)
+            middle_actor_loss = np.mean(actor_losses, axis=1)
+            middle_alpha_loss = np.mean(alpha_losses, axis=1)
+            lower_critic1_loss = np.sort(critic1_losses, axis=1)[:, 1]
+            lower_critic2_loss = np.sort(critic2_losses, axis=1)[:, 1]
+            lower_actor_loss = np.sort(actor_losses, axis=1)[:, 1]
+            lower_alpha_loss = np.sort(alpha_losses, axis=1)[:, 1]
+            upper_critic1_loss = np.sort(critic1_losses, axis=1)[:, -2]
+            upper_critic2_loss = np.sort(critic2_losses, axis=1)[:, -2]
+            upper_actor_loss = np.sort(actor_losses, axis=1)[:, -2]
+            upper_alpha_loss = np.sort(alpha_losses, axis=1)[:, -2]
+            # Plot metrics
             sns.lineplot(
-                x=range(len(avg_step_critic1_loss)),
-                y=avg_step_critic1_loss,
+                x=range(len(middle_critic1_loss)),
+                y=middle_critic1_loss,
                 ax=axes[0],
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
             )
             sns.lineplot(
-                x=range(len(avg_step_critic2_loss)),
-                y=avg_step_critic2_loss,
+                x=range(len(middle_critic2_loss)),
+                y=middle_critic2_loss,
                 ax=axes[1],
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
             )
             sns.lineplot(
-                x=range(len(avg_step_actor_loss)),
-                y=avg_step_actor_loss,
+                x=range(len(middle_actor_loss)),
+                y=middle_actor_loss,
                 ax=axes[2],
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
             )
             sns.lineplot(
-                x=range(len(avg_step_alpha_loss)),
-                y=avg_step_alpha_loss,
+                x=range(len(middle_alpha_loss)),
+                y=middle_alpha_loss,
                 ax=axes[3],
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
             )
             axes[0].fill_between(
-                x=range(len(avg_step_critic1_loss)),
-                y1=min_step_critic1_loss,
-                y2=max_step_critic1_loss, 
+                x=range(len(middle_critic1_loss)),
+                y1=lower_critic1_loss,
+                y2=upper_critic1_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
             axes[1].fill_between(
-                x=range(len(avg_step_critic2_loss)),
-                y1=min_step_critic2_loss,
-                y2=max_step_critic2_loss, 
+                x=range(len(middle_critic2_loss)),
+                y1=lower_critic2_loss,
+                y2=upper_critic2_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
             axes[2].fill_between(
-                x=range(len(avg_step_actor_loss)),
-                y1=min_step_actor_loss,
-                y2=max_step_actor_loss, 
+                x=range(len(middle_actor_loss)),
+                y1=lower_actor_loss,
+                y2=upper_actor_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
             axes[3].fill_between(
-                x=range(len(avg_step_alpha_loss)),
-                y1=min_step_alpha_loss,
-                y2=max_step_alpha_loss, 
+                x=range(len(middle_alpha_loss)),
+                y1=lower_alpha_loss,
+                y2=upper_alpha_loss, 
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
