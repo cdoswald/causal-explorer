@@ -8,7 +8,7 @@ import numpy as np
 import seaborn as sns
 
 plt.rcParams.update({"font.size": 16})
-COLORS = {"causal":"tab:blue", "random":"tab:green"}
+COLORS = {"causal":"tab:blue", "random":"tab:orange"}
 ALPHAS = {"causal": 1, "random": 1}
 LINEWIDTH = 1.5
 
@@ -39,6 +39,7 @@ def visualize_epoch_losses(run_args):
                     color=COLORS[cx_mode],
                     alpha=ALPHAS[cx_mode],
                     linewidth=LINEWIDTH,
+                    legend=False,
                     ax=axes[j],
                 )
                 axes[j].set_xlabel("Epoch")

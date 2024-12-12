@@ -3,11 +3,14 @@ import h5py
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 import seaborn as sns
 
 # Define constants
-COLORS = {"causal":"tab:blue", "random":"tab:green"}
+plt.rcParams.update({"font.size": 16})
+COLORS = {"causal":"tab:blue", "random":"tab:orange"}
+FIGSIZE = (10,4)
 LINEWIDTH = 1
 ALPHA = 0.2
 INCLUDE_TITLES = False
@@ -16,7 +19,7 @@ INCLUDE_TITLES = False
 def visualize_episode_rewards(run_args):
     """Visualize average episode rewards across random seeds."""
     for env_id in run_args.env_ids:
-        fig, ax = plt.subplots(1, 1, figsize=(16,6))
+        fig, ax = plt.subplots(1, 1, figsize=FIGSIZE)
         for cx_mode in run_args.cx_modes:
             # Get all experiment folders
             exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
@@ -52,9 +55,11 @@ def visualize_episode_rewards(run_args):
                 alpha=ALPHA,
             )
         # Label plot
-        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        # ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        ax.legend(loc="upper left", ncol=1)
         ax.set_xlabel("Episode")
         ax.set_ylabel("Average Episode Reward")
+        ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
         if INCLUDE_TITLES:
             ax.set_title(f"Average Episode Reward by Episode ({env_id})")
         fig.savefig(
@@ -66,7 +71,7 @@ def visualize_episode_rewards(run_args):
 def visualize_episode_lengths(run_args):
     """Visualize average episode lengths across random seeds."""
     for env_id in run_args.env_ids:
-        fig, ax = plt.subplots(1, 1, figsize=(16,6))
+        fig, ax = plt.subplots(1, 1, figsize=FIGSIZE)
         for cx_mode in run_args.cx_modes:
             # Get all experiment folders
             exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
@@ -102,9 +107,11 @@ def visualize_episode_lengths(run_args):
                 alpha=ALPHA,
             )
         # Label plot
-        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        # ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        ax.legend(loc="upper left", ncol=1)
         ax.set_xlabel("Episode")
         ax.set_ylabel("Average Episode Length")
+        ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
         if INCLUDE_TITLES:
             ax.set_title(f"Average Episode Length by Episode ({env_id})")
         fig.savefig(
@@ -116,7 +123,7 @@ def visualize_episode_lengths(run_args):
 def visualize_cumulative_rewards(run_args):
     """Visualize cumulative rewards by global timestep across random seeds."""
     for env_id in run_args.env_ids:
-        fig, ax = plt.subplots(1, 1, figsize=(16,6))
+        fig, ax = plt.subplots(1, 1, figsize=FIGSIZE)
         for cx_mode in run_args.cx_modes:
             # Get all experiment folders
             exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
@@ -149,8 +156,14 @@ def visualize_cumulative_rewards(run_args):
                 color=COLORS[cx_mode],
                 alpha=ALPHA,
             )
+        # Format tick labels
+        xticks_step = 50000
+        ax.set_xticks(range(0, rewards.shape[0] + xticks_step, xticks_step))
+        ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
+        ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
         # Label plot
-        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        # ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        ax.legend(loc="upper left", ncol=1)
         ax.set_xlabel("Global Timestep")
         ax.set_ylabel("Cumulative Reward")
         if INCLUDE_TITLES:
@@ -164,7 +177,7 @@ def visualize_cumulative_rewards(run_args):
 def visualize_model_losses(run_args):
     """Visualize losses for actor and critic models."""
     for env_id in run_args.env_ids:
-        fig, axes = plt.subplots(4, 1, figsize=(8,8))
+        fig, axes = plt.subplots(4, 1, figsize=(10, 10))
         fig.subplots_adjust(hspace=1)
         for cx_mode in run_args.cx_modes:
             # Get all experiment folders
@@ -206,6 +219,7 @@ def visualize_model_losses(run_args):
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
+                legend=False,
             )
             sns.lineplot(
                 x=range(len(middle_critic2_loss)),
@@ -214,6 +228,7 @@ def visualize_model_losses(run_args):
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
+                legend=False,
             )
             sns.lineplot(
                 x=range(len(middle_actor_loss)),
@@ -222,6 +237,7 @@ def visualize_model_losses(run_args):
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
+                legend=False,
             )
             sns.lineplot(
                 x=range(len(middle_alpha_loss)),
@@ -230,6 +246,7 @@ def visualize_model_losses(run_args):
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
                 linewidth=LINEWIDTH,
+                legend=False,
             )
             axes[0].fill_between(
                 x=range(len(middle_critic1_loss)),
@@ -262,7 +279,13 @@ def visualize_model_losses(run_args):
         for i in range(4):
             # axes[i].legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
             axes[i].set_xlabel("Timestep")
-            axes[i].set_ylabel("Average Loss \n(Stddev)")
+            axes[i].set_ylabel("Average Loss")
+            # Format tick labels
+            xticks_step = 50000
+            axes[i].set_xticks(range(0, critic1_losses.shape[0] + xticks_step, xticks_step))
+            axes[i].xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
+            axes[i].yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
+        axes[0].legend(loc="upper right", ncol=2)
         axes[0].set_title("Critic 1 loss", loc="left")
         axes[1].set_title("Critic 2 loss", loc="left")
         axes[2].set_title("Actor loss", loc="left")
