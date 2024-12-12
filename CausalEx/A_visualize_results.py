@@ -86,11 +86,11 @@ def visualize_episode_reward_variance(run_args):
             min_num_episodes = min([len(exp) for exp in exp_rewards_all])
             rewards = np.array([exp[:min_num_episodes] for exp in exp_rewards_all]).T
             # Aggregate metrics across all seeds
-            plot_var = np.var(rewards, axis=1)
+            plot_sd = np.std(rewards, axis=1)
             # Plot metrics
             sns.lineplot(
                 x=range(min_num_episodes),
-                y=plot_var,
+                y=plot_sd,
                 ax=ax,
                 label=f"{cx_mode}",
                 color=COLORS[cx_mode],
@@ -100,7 +100,7 @@ def visualize_episode_reward_variance(run_args):
         # ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
         ax.legend(loc="upper left", ncol=1)
         ax.set_xlabel("Episode")
-        ax.set_ylabel("Reward Variance")
+        ax.set_ylabel("Reward Std Dev")
         ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
         if INCLUDE_TITLES:
             ax.set_title(f"Episode Reward Variance by Episode ({env_id})")
@@ -344,8 +344,8 @@ def visualize_model_losses(run_args):
 if __name__ == "__main__":
     from CausalEx.config import RunArgs
     run_args = RunArgs()
-    # visualize_episode_rewards(run_args)
-    # visualize_episode_lengths(run_args)
-    # visualize_cumulative_rewards(run_args)
-    # visualize_model_losses(run_args)
+    visualize_episode_rewards(run_args)
+    visualize_episode_lengths(run_args)
+    visualize_cumulative_rewards(run_args)
+    visualize_model_losses(run_args)
     visualize_episode_reward_variance(run_args)
