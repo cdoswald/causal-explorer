@@ -67,6 +67,48 @@ def visualize_episode_rewards(run_args):
             bbox_inches="tight",
         )
 
+def visualize_episode_reward_variance(run_args):
+    """Visualize episode reward variance across random seeds."""
+    for env_id in run_args.env_ids:
+        fig, ax = plt.subplots(1, 1, figsize=FIGSIZE)
+        for cx_mode in run_args.cx_modes:
+            # Get all experiment folders
+            exp_folder_pattern = os.path.join(run_args.run_dir, f"env_{env_id}_mode_{cx_mode}_*")
+            exp_dirs = [f for f in glob.glob(exp_folder_pattern) if os.path.isdir(f)]
+            # Load metrics
+            exp_rewards_all = []
+            for exp_dir in exp_dirs:
+                exp_rewards_path = os.path.join(exp_dir, "metrics.h5")
+                if os.path.exists(exp_rewards_path):
+                    with h5py.File(exp_rewards_path, "r") as file:
+                        exp_rewards_all.append(list(file["episode_rewards"][:]))
+            # Clip metrics lists so that all seeds have same number of episodes
+            min_num_episodes = min([len(exp) for exp in exp_rewards_all])
+            rewards = np.array([exp[:min_num_episodes] for exp in exp_rewards_all]).T
+            # Aggregate metrics across all seeds
+            plot_var = np.var(rewards, axis=1)
+            # Plot metrics
+            sns.lineplot(
+                x=range(min_num_episodes),
+                y=plot_var,
+                ax=ax,
+                label=f"{cx_mode}",
+                color=COLORS[cx_mode],
+                linewidth=LINEWIDTH,
+            )
+        # Label plot
+        # ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        ax.legend(loc="upper left", ncol=1)
+        ax.set_xlabel("Episode")
+        ax.set_ylabel("Reward Variance")
+        ax.yaxis.set_major_formatter(ticker.StrMethodFormatter("{x:,.0f}"))
+        if INCLUDE_TITLES:
+            ax.set_title(f"Episode Reward Variance by Episode ({env_id})")
+        fig.savefig(
+            os.path.join(run_args.run_dir, f"env_{env_id}_episode_reward_variance.png"),
+            bbox_inches="tight",
+        )
+
 
 def visualize_episode_lengths(run_args):
     """Visualize average episode lengths across random seeds."""
@@ -302,7 +344,8 @@ def visualize_model_losses(run_args):
 if __name__ == "__main__":
     from CausalEx.config import RunArgs
     run_args = RunArgs()
-    visualize_episode_rewards(run_args)
-    visualize_episode_lengths(run_args)
-    visualize_cumulative_rewards(run_args)
-    visualize_model_losses(run_args)
+    # visualize_episode_rewards(run_args)
+    # visualize_episode_lengths(run_args)
+    # visualize_cumulative_rewards(run_args)
+    # visualize_model_losses(run_args)
+    visualize_episode_reward_variance(run_args)
