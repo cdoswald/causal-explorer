@@ -1,3 +1,4 @@
+import os
 import random
 import time
 
@@ -12,10 +13,15 @@ from stable_baselines3.common.buffers import ReplayBuffer
 from CausalEx.config import RunArgs, ExperimentArgs
 from CausalEx.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
 
+plt.rcParams.update({"font.size": 16})
+
 
 if __name__ == "__main__":
 
     # Set-up
+    output_dir = os.path.join("runs", "time_comparisons")
+    os.makedirs(output_dir, exist_ok=True)
+
     time_dict = {"causal":[], "random":[]}
     run_args = RunArgs()
     env_id = "Ant-v5"
@@ -69,14 +75,24 @@ if __name__ == "__main__":
     random_sd_time = np.std(time_dict["random"])
 
     # Plot distributions
-    fig, axes = plt.subplots(1, 2, figsize=(8,6))
+    fig, axes = plt.subplots(1, 1, figsize=(12, 8))
     sns.histplot(
         time_dict["causal"],
-        ax=axes[0]
+        label="causal",
+        ax=axes
     )
     sns.histplot(
         time_dict["random"],
-        ax=axes[1]
+        label="random",
+        ax=axes
+    )
+    axes.tick_params(axis="x", rotation=45)
+    axes.set_xlabel("Wall Clock Time (seconds)")
+    axes.set_ylabel("Number of Experiments")
+    axes.legend()
+    fig.savefig(
+        os.path.join(output_dir, f"time_comp_prepop_buffer_env_{env_id}_{n_sims}sims.png"),
+        bbox_inches="tight",
     )
 
     # Bootstrap difference in means
@@ -99,8 +115,17 @@ if __name__ == "__main__":
     print(f"Average difference in means (causal-random): {round(np.mean(diff_in_means), 3)}")
     
     # Plot difference in means
-    fig, axes = plt.subplots(1, 1, figsize=(8,6))
+    fig, axes = plt.subplots(1, 1, figsize=(12, 8))
     sns.histplot(
         diff_in_means,
+        label="causal - random",
         ax=axes
+    )
+    axes.tick_params(axis="x", rotation=45)
+    axes.set_xlabel("Wall Clock Time (seconds)")
+    axes.set_ylabel("Number of Bootstrapped Samples")
+    # axes.legend()
+    fig.savefig(
+        os.path.join(output_dir, f"time_comp_prepop_buffer_env_{env_id}_{n_sims}sims_diff_means.png"),
+        bbox_inches="tight",
     )
