@@ -14,4 +14,3 @@ fi
 
 # Run main experiments
 python3 CausalEx/A_main.py
-
