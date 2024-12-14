@@ -8,9 +8,7 @@ from stable_baselines3.common.buffers import ReplayBuffer
 import torch
 
 # TODO: think about how to set random seed between action samples
-# TODO: benchmark speed and success of causal explorer vs random exploration
 # TODO: plot histogram of rewards of different n-way interactions
-# TODO: render trajectories of causal explorer
 # TODO: consider slight perturbations (positive and negative) relative to baseline action
 # TODO: explore how batch size and training frequency params affect average episode return
 # TODO: explore diminishing returns of causal exploration period length
