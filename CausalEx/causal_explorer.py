@@ -36,18 +36,6 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
     torch.manual_seed(args.seed + ADJUST_SEED)
     torch.backends.cudnn.deterministic = args.torch_deterministic
 
-    # # Create combinations of column indices to unmask
-    # n_action_dims = env.action_space.shape[0]
-    # n_interactions = min(args.max_nway_interact, n_action_dims)
-
-    # interaction_col_idxs = []
-    # interaction_level = 1
-    # while interaction_level <= n_interactions:
-    #     interaction_col_idxs += [
-    #         x for x in combinations(range(n_action_dims), interaction_level)
-    #     ]
-    #     interaction_level += 1
-
     # Create combinations of column indices to unmask
     ## Testing reversing order to prioritize higher-dimensional interactions
     n_action_dims = env.action_space.shape[0]
