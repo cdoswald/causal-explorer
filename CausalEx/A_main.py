@@ -30,6 +30,7 @@ def main():
 
     # Create visualizations
     visualize_episode_rewards(run_args)
+    visualize_episode_reward_variance(run_args)
     visualize_episode_lengths(run_args)
     visualize_cumulative_rewards(run_args)
     visualize_model_losses(run_args)
