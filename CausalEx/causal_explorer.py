@@ -124,7 +124,7 @@ def prepopulate_buffer_random(env, rb, args, noise_scale: Optional[int] = None) 
             real_next_obs = next_obs.copy() if not (terminations or truncations) else obs
             if noise_scale is not None:
                 obs += torch.randn_like(obs) * noise_scale
-                real_next_obs += torch.randn_like(real_next_obs) * noise_scale
+                # real_next_obs += torch.randn_like(real_next_obs) * noise_scale
                 actions += torch.randn_like(actions) * noise_scale
                 rewards += torch.randn_like(rewards) * noise_scale
             rb.add(obs, real_next_obs, actions, rewards, terminations, infos)
