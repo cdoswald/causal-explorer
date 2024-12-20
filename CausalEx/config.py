@@ -23,7 +23,7 @@ class RunArgs:
     """directory to store all experiment results"""
 
     # General settings
-    use_n_seeds: int = 20 # Current max is 100
+    use_n_seeds: int = 10 # Current max is 100
     """number of random seeds to test (results averaged over all seeds)"""
     env_ids: Tuple[str] = (
         "HalfCheetah-v5",
