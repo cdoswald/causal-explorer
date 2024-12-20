@@ -8,8 +8,12 @@ import numpy as np
 import seaborn as sns
 
 plt.rcParams.update({"font.size": 16})
-COLORS = {"causal":"tab:blue", "random":"tab:orange"}
-ALPHAS = {"causal": 1, "random": 1}
+COLORS = {
+    "causal":"tab:blue",
+    "random":"tab:orange",
+    "random_with_noise":"tab:green",
+}
+ALPHAS = {"causal": 1, "random": 1, "random_with_noise":1}
 LINEWIDTH = 1.5
 
 
