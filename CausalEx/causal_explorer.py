@@ -9,9 +9,7 @@ from stable_baselines3.common.buffers import ReplayBuffer
 import torch
 
 # TODO: think about how to set random seed between action samples
-# TODO: benchmark speed and success of causal explorer vs random exploration
 # TODO: plot histogram of rewards of different n-way interactions
-# TODO: render trajectories of causal explorer
 # TODO: consider slight perturbations (positive and negative) relative to baseline action
 # TODO: explore how batch size and training frequency params affect average episode return
 # TODO: explore diminishing returns of causal exploration period length
@@ -36,18 +34,6 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
     np.random.seed(args.seed + ADJUST_SEED)
     torch.manual_seed(args.seed + ADJUST_SEED)
     torch.backends.cudnn.deterministic = args.torch_deterministic
-
-    # # Create combinations of column indices to unmask
-    # n_action_dims = env.action_space.shape[0]
-    # n_interactions = min(args.max_nway_interact, n_action_dims)
-
-    # interaction_col_idxs = []
-    # interaction_level = 1
-    # while interaction_level <= n_interactions:
-    #     interaction_col_idxs += [
-    #         x for x in combinations(range(n_action_dims), interaction_level)
-    #     ]
-    #     interaction_level += 1
 
     # Create combinations of column indices to unmask
     ## Testing reversing order to prioritize higher-dimensional interactions

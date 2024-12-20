@@ -16,6 +16,7 @@ from config import RunArgs, ExperimentArgs
 from models import Actor
 from utils import save_video
 
+#TODO: update for CausalEx refactor
 
 def eval_SAC(args, actor_path):
     """Evaluate trained SAC agent"""
