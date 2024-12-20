@@ -12,5 +12,6 @@ if [ $RUN_TESTS ]; then
     pytest "CausalEx/tests"
 fi
 
-# Run main experiments
+# Run experiments
 python3 CausalEx/A_main.py
+python3 CausalEx/B_main.py
