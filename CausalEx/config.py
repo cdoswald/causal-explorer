@@ -15,7 +15,7 @@ class RunArgs:
     num_workers: int = 20 # num_cores = os.cpu_count()
 
     # Directory settings
-    run_name: str = "SAC_241208v1"
+    run_name: str = "SAC_241220v1"
     """unique name to identify run"""
     overwrite_run_dir: bool = False
     """if True, will overwrite existing run_dir with the same name"""
@@ -23,7 +23,7 @@ class RunArgs:
     """directory to store all experiment results"""
 
     # General settings
-    use_n_seeds: int = 20 # Current max is 100
+    use_n_seeds: int = 10 # Current max is 100
     """number of random seeds to test (results averaged over all seeds)"""
     env_ids: Tuple[str] = (
         "HalfCheetah-v5",
@@ -33,8 +33,9 @@ class RunArgs:
         # "Humanoid-v5", # TODO: fix memory issues
     )
     """list of MuJoCo environments to use in experiments"""
-    cx_modes: Tuple[str] = ("causal", "random")
-    """replay buffer prepopulation methods to test; options: {'causal', 'random'}"""
+    cx_modes: Tuple[str] = ("random_with_noise", "random")
+    """replay buffer prepopulation methods to test; 
+    options: {'causal', 'random', 'random_with_noise'}"""
 
     # RunArgs methods
     def setup_dirs(self) -> None:
@@ -99,6 +100,8 @@ class ExperimentArgs(RunArgs):
     """number of environment steps to run per n-way interaction"""
     sort_interact_high_to_low: bool = True
     """indicator to prioritize higher-order interactions over lower-order"""
+    noise_scale: float = 0.1
+    """normal distribution std dev if running 'random_with_noise' cx_mode"""
 
     # ExperimentArgs methods
     def create_exp_dir(self) -> None:

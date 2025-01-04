@@ -2,6 +2,7 @@ from itertools import combinations
 from math import comb
 import random
 import time
+from typing import Optional
 
 import numpy as np
 from stable_baselines3.common.buffers import ReplayBuffer
@@ -89,14 +90,16 @@ def prepopulate_buffer_causal(env, rb, args) -> ReplayBuffer:
     return rb
 
 
-def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
+def prepopulate_buffer_random(env, rb, args, noise_scale: Optional[int] = None) -> ReplayBuffer:
     """Prepopulated replay buffer with randomly sampled actions.
     
     Arguments
         env: instantiated gymnasium environment
         rb: instantiated stable_baselines3 replay buffer
         args: configuration arguments dataclass
-    
+        noise_scale: optional argument; if not None, adds random noise
+            sampled from normal distribution with stddev = noise_scale
+
     Returns
         stable_baselines3 replay buffer with trajectory data
     """
@@ -119,6 +122,10 @@ def prepopulate_buffer_random(env, rb, args) -> ReplayBuffer:
             next_obs, rewards, terminations, truncations, infos = env.step(actions) #TODO: check warning
             # Add data to replay buffer
             real_next_obs = next_obs.copy() if not (terminations or truncations) else obs
+            if noise_scale is not None:
+                obs += np.random.randn(*obs.shape) * noise_scale
+                actions += np.random.randn(*actions.shape) * noise_scale
+                rewards += np.random.randn(*rewards.shape) * noise_scale
             rb.add(obs, real_next_obs, actions, rewards, terminations, infos)
             # DO NOT MODIFY: Crucial step (easy to overlook)
             obs = next_obs

@@ -38,7 +38,7 @@ def main():
         # Test all buffer sizes
         for buffer_size in run_args.test_buffer_sizes:
 
-            # Test cx modes (causal vs random)
+            # Test cx modes
             for cx_mode in run_args.cx_modes:
 
                 # Test all seeds

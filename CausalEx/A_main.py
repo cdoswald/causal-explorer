@@ -7,6 +7,7 @@ from config import RunArgs, ExperimentArgs
 from A_run_all_experiments import run_all_experiments
 from A_visualize_results import (
     visualize_episode_rewards,
+    visualize_episode_reward_variance,
     visualize_episode_lengths,
     visualize_cumulative_rewards,
     visualize_model_losses,

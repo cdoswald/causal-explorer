@@ -68,6 +68,8 @@ def run_single_experiment(args):
         rb = prepopulate_buffer_causal(env, rb, args)
     elif args.cx_mode.lower() == "random":
         rb = prepopulate_buffer_random(env, rb, args)
+    elif args.cx_mode.lower() == "random_with_noise":
+        rb = prepopulate_buffer_random(env, rb, args, noise_scale=args.noise_scale)
     else:
         raise ValueError(
             f"CX mode'{args.cx_mode} not recognized. Double-check configuration arguments."

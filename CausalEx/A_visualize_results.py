@@ -9,7 +9,7 @@ import seaborn as sns
 
 # Define constants
 plt.rcParams.update({"font.size": 16})
-COLORS = {"causal":"tab:blue", "random":"tab:orange"}
+COLORS = {"causal":"tab:blue", "random":"tab:orange", "random_with_noise":"tab:green"}
 FIGSIZE = (10,4)
 LINEWIDTH = 1
 ALPHA = 0.2
