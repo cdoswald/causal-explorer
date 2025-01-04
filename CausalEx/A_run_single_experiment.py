@@ -10,9 +10,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from stable_baselines3.common.buffers import ReplayBuffer
 
-from CausalEx.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
-from CausalEx.models import Actor, SoftQNetwork
-from CausalEx.utils import save_dict_to_hdf5
+from causalex.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
+from causalex.models import Actor, SoftQNetwork
+from causalex.utils import save_dict_to_hdf5
 
 
 # Based on CleanRL SAC implementation

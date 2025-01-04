@@ -10,8 +10,8 @@ import gymnasium as gym
 import torch
 from stable_baselines3.common.buffers import ReplayBuffer
 
-from CausalEx.config import RunArgs, ExperimentArgs
-from CausalEx.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
+from causalex.config import RunArgs, ExperimentArgs
+from causalex.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
 
 plt.rcParams.update({"font.size": 16})
 

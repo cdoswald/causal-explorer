@@ -2,8 +2,8 @@ import multiprocessing as mp
 import os
 import time
 
-from CausalEx.config import RunArgs, ExperimentArgs
-from CausalEx.A_run_single_experiment import run_single_experiment
+from causalex.config import RunArgs, ExperimentArgs
+from causalex.A_run_single_experiment import run_single_experiment
 
 
 def test_A_run_all_experiments():

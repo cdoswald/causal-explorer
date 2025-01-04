@@ -54,7 +54,7 @@ def visualize_epoch_losses(run_args):
 
 
 if __name__ == "__main__":
-    from CausalEx.config import RunArgs
+    from causalex.config import RunArgs
     run_args = RunArgs()
     run_args.test_buffer_sizes = [10_000, 100_000, 1_000_000]
     run_args.loss_data_dir = os.path.join("runs", "predict_rewards")

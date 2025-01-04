@@ -15,9 +15,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from stable_baselines3.common.buffers import ReplayBuffer
 
-from CausalEx.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
-from CausalEx.models import SoftQNetwork
-from CausalEx.utils import calculate_n_interactions
+from causalex.causal_explorer import prepopulate_buffer_causal, prepopulate_buffer_random
+from causalex.models import SoftQNetwork
+from causalex.utils import calculate_n_interactions
 
 
 def train_Q_model(args):

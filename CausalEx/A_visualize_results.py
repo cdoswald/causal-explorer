@@ -342,7 +342,7 @@ def visualize_model_losses(run_args):
 
 
 if __name__ == "__main__":
-    from CausalEx.config import RunArgs
+    from causalex.config import RunArgs
     run_args = RunArgs()
     visualize_episode_rewards(run_args)
     visualize_episode_lengths(run_args)

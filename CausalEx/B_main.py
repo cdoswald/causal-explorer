@@ -3,9 +3,9 @@ import multiprocessing as mp
 import os
 import time
 
-from CausalEx.config import RunArgs, ExperimentArgs
-from CausalEx.B_train_Q_model import train_Q_model
-from CausalEx.B_visualize_epoch_losses import visualize_epoch_losses
+from causalex.config import RunArgs, ExperimentArgs
+from causalex.B_train_Q_model import train_Q_model
+from causalex.B_visualize_epoch_losses import visualize_epoch_losses
 
 
 def main():
